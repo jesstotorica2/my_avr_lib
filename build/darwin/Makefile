@@ -1,10 +1,14 @@
 # Directories
+LIB_NAME=my_avr
+
 SRC_DIR=../../src
 BUILD_DIR=./object_files
+LIB_DIR=../../lib
+LIBINC_DIR=../../include
 
 INCLUDES= -I$(SRC_DIR) 
 
-# Compiler options
+# Compiler/MCU options
 MCU=atmega328
 F_CPU=16000000
 CC=avr-gcc
@@ -17,7 +21,8 @@ SRC_FILES=$(shell cd $(SRC_DIR) && find *.cpp)
 SRC_OBJ=$(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
 .PHONY: all
-all: dirs $(SRC_OBJ)
+all: dirs $(SRC_OBJ) lib
+	@cp $(SRC_DIR)/*.h $(LIBINC_DIR)
 	@echo "Complete..."
 
 # Create necessary directories
@@ -33,5 +38,20 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "-----------------Finished Compiling $@----------------"
 	@echo
 
+# Compile object files
+compile: dirs $(SRC_OBJ)
+	@cp $(SRC_DIR)/*.h $(LIBINC_DIR)
 
-#clean:
+# Create shared library
+lib:
+	@echo
+	@echo "--------------------Assembling lib$(LIB_NAME).a----------------------"
+	avr-ar rcs $(LIB_DIR)/lib$(LIB_NAME).a $(SRC_OBJ)
+	@echo "--------------------Finished Assembling -----------------------------"
+	@echo
+
+# Remove makefile produced files
+clean:
+	rm -rf $(BUILD_DIR)
+	rm $(LIB_DIR)/lib$(LIB_NAME).a
+
