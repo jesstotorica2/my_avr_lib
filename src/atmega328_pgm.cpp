@@ -91,8 +91,6 @@ bool Atmega328_Programmer::startProgrammingMode(){;
 	setPin(SLV_RESET,1);
 	_delay_ms(100);
 
-  // Set SCK low
-  // setPin(SCK, 0);
   // Set Reset low
   setPin(SLV_RESET, 0);
   _delay_ms(5);

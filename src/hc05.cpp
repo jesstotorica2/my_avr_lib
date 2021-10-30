@@ -9,7 +9,7 @@
 //	Private
 //=====================
 
-
+//int debug = 0;////////////!!!DEBUG!!!!!!
 //
 // p_send()
 //
@@ -27,6 +27,7 @@ bool hc05::p_send(const char* data, char* resp, int rb_len, unsigned int timeout
 	if( rb_len <= 0 ) return false;
 
 	// Start timer
+	//if(debug==0)//DEUG!!!!!!!!!!!!!!!!!!!!!!
   tmr_ptr->start(timeout);
 	while( !tmr_ptr->done() && !tkn_found ){
 		tkn_found = recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );	

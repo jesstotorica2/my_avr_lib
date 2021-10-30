@@ -49,8 +49,8 @@ Timer0::Timer0() {
 //
 // Detructor
 Timer0::~Timer0() {
-	TIMSK0 &=(~(1<<TOIE0)); // Disable interrupt
-	Timer0::stop();					// Stop counting
+	//TIMSK0 &=(~(1<<TOIE0)); // Disable interrupt
+	//Timer0::stop();					// Stop counting
 }
 
 // start()
