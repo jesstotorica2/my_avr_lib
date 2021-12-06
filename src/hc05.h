@@ -10,7 +10,7 @@
 #include <string.h>
 #include <util/delay.h>
 #include "myUART.h"
-#include "myTimer.h"
+#include "Stopwatch.h"
 #include "myIO.h"
 
 #define BT_DEFAULT_BAUD_RATE 		 38400
@@ -19,7 +19,7 @@
 class hc05 {
   private:
     myUART* uart_ptr;
-    Timer0* tmr_ptr;
+    Stopwatch* tmr_ptr;
 		uint8_t	EN_pin;
 
     bool p_send(const char* data, char* resp, int rb_len, unsigned int timeout, const char* tkn );
@@ -28,7 +28,7 @@ class hc05 {
 
   public:
     hc05();
-    bool init(myUART* u_ptr, Timer0* t_ptr, uint8_t enable_pin,  unsigned long int br);
+    bool init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t enable_pin,  unsigned long int br);
 		void tr(unsigned char x);
 		bool send(const char* data, char* resp = nullptr, int rb_len = 0, unsigned int timeout = 5000, const char* tkn = nullptr);    
 		bool sendnum(int num, int base = 10);

@@ -47,6 +47,9 @@ void mySPI::init(int mst, int clk_div, int mode) {
 	SPCR |= (clk_div&0x3);
 	SPSR |= ((clk_div>>2)&0x1);
 	
+	if( mst ) set_mst();
+	else			set_slv();
+
 }
 
 //
@@ -92,9 +95,30 @@ void mySPI::set_slv(){
 	BITCLR(SPCR, MSTR);
 	
 	// Set I/O 
+  setPin(SPI_SCK, 0);
 	setInput (SPI_SCK);  	// SCK
-  setOutput(SPI_MISO);  // MISO
-  setInput (SPI_MOSI);  // MOSI
+	setOutput(SPI_MISO);  // MISO
+  setPin(SPI_MOSI, 0);
+	setInput (SPI_MOSI);  // MOSI
+  setPin(SPI_SS, 0);
+	setInput (SPI_SS);		// SS
+
+}
+
+//
+// set_highz()
+//
+// Set SPI I/O to high-impedance (all inputs)
+void mySPI::set_highz(){
+	
+	// Set I/O 
+  setPin(SPI_SCK, 0);
+	setInput (SPI_SCK);  	// SCK
+  setPin(SPI_MISO, 0);
+	setInput(SPI_MISO);  // MISO
+  setPin(SPI_MOSI, 0);
+	setInput (SPI_MOSI);  // MOSI
+  setPin(SPI_SS, 0);
 	setInput (SPI_SS);		// SS
 
 }
@@ -192,15 +216,15 @@ void mySPI::send(spi_byte_t* d, spi_byte_t* r, int blen) {
 
 }
 
-#if _SPI_ISR_ENABLE_ == 0
+/*#if _SPI_ISR_ENABLE_ == 0
 void _MY_SPI_ISR(){}
-#endif
+#endif*/
 //erroror
 //void _MY_SPI_ISR_() {}
 
 //
-ISR (SPI_STC_vect){
-	_MY_SPI_ISR_();
-}
+/*ISR (SPI_STC_vect){
+	//_MY_SPI_ISR_();
+}*/
 
 

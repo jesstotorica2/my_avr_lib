@@ -174,7 +174,7 @@ void myUART::tr_str(const char* d) {
 //
 //  Transmit byte array
 //  
-void myUART::tr_b(unsigned char* d, int blen) {
+void myUART::tr_b(const unsigned char* d, int blen) {
   for( int i = 0; i < blen; i++ ) {
     tr((unsigned int)(d[i]));
   }
@@ -211,7 +211,7 @@ void myUART::printnum(int num, int base) {
 	print(num_str);
 }
 
-///////// Ready ////////////////////
+///////// Read ////////////////////
 
 
 //
@@ -227,11 +227,22 @@ bool myUART::available() {
 }
 
 //
+//  peek()
+//
+//  Read char without removing from the buffer
+//
+char myUART::peek() 
+{
+	return((char)_myUART_CBUFF[_myUART_rd_ptr]);
+}
+
+//
 //  read()
 //
 //  Read one character from the data buffer
 //
-char myUART::read() {
+char myUART::read() 
+{
   return((char)_myUART_rd_buff());
 }
 
@@ -240,11 +251,25 @@ char myUART::read() {
 //
 //  Read one character from the data buffer
 //
-void myUART::flush() {
+void myUART::flush() 
+{
   _myUART_wr_ptr = _myUART_rd_ptr;
 }
 
 
+//
+// overflow()
+//
+// Returns overflow flag. Clears on read
+bool myUART::overflow()
+{
+	if(_myUART_buff_ovrflw)
+	{
+		_myUART_buff_ovrflw = false;
+		return true;
+	}
+	return false;
+}
 
 void _myUART_wr_buff(unsigned char x) {
   int wrptr_nxt = ((_myUART_wr_ptr+1)%myUART_BUFF_SIZE);  
@@ -284,8 +309,7 @@ void MY_UART_RX_ISR() {}
 #ifndef MY_UART_ISR
 #define MY_UART_ISR
 ISR (USART_RX_vect) {
-  unsigned char x = UDR0;
-  _myUART_wr_buff(x);
+  _myUART_wr_buff((uint8_t)UDR0);
   MY_UART_RX_ISR();
 }
 #endif

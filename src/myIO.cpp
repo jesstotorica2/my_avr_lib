@@ -43,7 +43,7 @@ void setPin(int pin, int val) {
 //
 //	getPin()
 //
-//	set pin digital value (0 or 1)
+//	get pin digital value (0 or 1)
 int getPin(int pin) {
 	if 		  ( pin >= 0  && pin < 8  ) return( (PIND>>pin)&0x1 );
   else if ( pin >= 8  && pin < 14 ) return( (PINB>>(pin%8))&0x1 ); 

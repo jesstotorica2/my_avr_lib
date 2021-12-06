@@ -12,9 +12,9 @@
 #include "myIO.h"
 #include <stdlib.h>
 #include <util/delay.h>
+#include "Stopwatch.h"
 
-#include "myTimer.h"
-extern Timer0 tmr0;
+extern Stopwatch tmr0;
 
 #ifndef PGM_BYTE_T
 #define PGM_BYTE_T unsigned char

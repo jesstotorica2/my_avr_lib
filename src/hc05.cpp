@@ -14,7 +14,8 @@
 // p_send()
 //
 //  
-bool hc05::p_send(const char* data, char* resp, int rb_len, unsigned int timeout, const char* tkn){
+bool hc05::p_send(const char* data, char* resp, int rb_len, unsigned int timeout, const char* tkn)
+{
   int rlen = 0;
 	bool tkn_found = false;
 	int tkn_len	= strlen(tkn);
@@ -27,9 +28,9 @@ bool hc05::p_send(const char* data, char* resp, int rb_len, unsigned int timeout
 	if( rb_len <= 0 ) return false;
 
 	// Start timer
-	//if(debug==0)//DEUG!!!!!!!!!!!!!!!!!!!!!!
   tmr_ptr->start(timeout);
-	while( !tmr_ptr->done() && !tkn_found ){
+	while( !tmr_ptr->done() && !tkn_found )
+	{
 		tkn_found = recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );	
 	}
 	return tkn_found;	
@@ -39,20 +40,24 @@ bool hc05::p_send(const char* data, char* resp, int rb_len, unsigned int timeout
 //	recv_to_buf()
 //
 //	
-bool hc05::recv_to_buf(char *d, int* idx, int len, const char* tkn, int tkn_len){
+bool hc05::recv_to_buf(char *d, int* idx, int len, const char* tkn, int tkn_len)
+{
 	bool tkn_found = false;
 	bool len_exceeded = ((*idx) >= len);
-	while( uart_ptr->available() && !len_exceeded ){
+	while( uart_ptr->available() && !len_exceeded )
+	{
 		if( (*idx) < len ) { 									// Gaurd from resp buffer overflow
 			d[(*idx)]   = uart_ptr->read(); 		// Get uart character
 			d[(*idx)+1] = '\0';						 			// Null terminate string 
 			(*idx) = (*idx) + 1;														// Increment response length
 
-			if( (*idx) >= tkn_len && (tkn_len > 0) ) { // Dont look for token if tkn_len is zero
+			if( (*idx) >= tkn_len && (tkn_len > 0) ) 
+			{ // Dont look for token if tkn_len is zero
 				for( int i = 0; (tkn_found = (tkn[i] == d[(*idx)-tkn_len+i])) && (i < tkn_len); i++ );
 			}
 
-		}else
+		}
+		else
 			len_exceeded = true;
 	}
 	return (tkn_found | len_exceeded);
@@ -66,8 +71,8 @@ bool hc05::recv_to_buf(char *d, int* idx, int len, const char* tkn, int tkn_len)
 // hc05()
 //
 // Constructor
-hc05::hc05(){
-	//debug = false;	
+hc05::hc05()
+{
 	EN_pin = 7;
 }
 
@@ -75,7 +80,7 @@ hc05::hc05(){
 //	init()
 //
 // 	Initialize UART for HC-05 comms
-bool hc05::init(myUART* u_ptr, Timer0* t_ptr, uint8_t enable_pin, unsigned long int br) {
+bool hc05::init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t enable_pin, unsigned long int br) {
 	bool have_coms = false;
 	EN_pin = enable_pin;
 	setOutput(EN_pin);
@@ -88,7 +93,7 @@ bool hc05::init(myUART* u_ptr, Timer0* t_ptr, uint8_t enable_pin, unsigned long 
 	}
 	else									uart_ptr = u_ptr;
 
-	if(t_ptr == nullptr)	tmr_ptr = (Timer0*)malloc(sizeof(Timer0));
+	if(t_ptr == nullptr)	tmr_ptr = (Stopwatch*)malloc(sizeof(Stopwatch));
 	else									tmr_ptr = t_ptr;
 	
 

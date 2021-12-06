@@ -37,15 +37,17 @@ class myUART {
     // Transmit
     void tr(unsigned int d);
     void tr_str(const char* d);
-    void tr_b(unsigned char* d, int blen);
+    void tr_b(const unsigned char* d, int blen);
     void tr_9b(unsigned int* d, int blen);
 		void print(const char* d);
 		void printnum(int num, int base = 10);
 
     // Receive
     bool available();
+		char peek();
 		char read();
 		void flush();
+		bool overflow();
 };
 
 void _myUART_wr_buff(unsigned char x);

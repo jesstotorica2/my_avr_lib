@@ -116,4 +116,14 @@ void BTpgmrEcho::print(const char* d)
 	wr_stream((uint8_t*)d, wlen);
 }
 
-
+//
+//	printnum()
+//
+//	String print easy use
+void BTpgmrEcho::printnum(int num, uint8_t base)
+{
+  char num_str[16];
+  itoa(num, num_str, base);
+	uint16_t wlen = strlen(num_str);
+	wr_stream((uint8_t*)num_str, wlen);
+}

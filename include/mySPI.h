@@ -35,6 +35,7 @@ class mySPI {
 		void disable();
 		void set_mst();
 		void set_slv();
+		void set_highz();
 		void set_cpha(int cpha);
 		void set_cpol(int cpol);
 		void set_clk_div(int div);

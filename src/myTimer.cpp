@@ -1,118 +1,132 @@
 /*
 
-  myTimer.cpp
+	myTimer.cpp
 
 */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
 #include "myTimer.h"
 
-//****************************************************
-//    Timer0
-//****************************************************
-
-unsigned long int        _my_timer0_ms;
-unsigned int  			_my_timer0_us;
-unsigned int        _my_timer0_target;
-
-//===========
-//  private
-//===========
-
+//***********	WGM ****************
 //
-// clearPSR()
+// set Waveform Generation Mode
 //
-void Timer0::clearPSR(){
-  GTCCR |= (1<<PSRSYNC);
+void tmr_setWGM0( uint8_t wgm )
+{	
+	// TCCR0A[1:0] = WGM0[1:0]
+	TCCR0A &= ~0x3;
+	TCCR0A |= (0x3 & wgm);
+	// TCCR0B[3] = WGM0[2]
+	TCCR0B &= ~(1<<WGM02);
+	TCCR0B |= (((wgm>>2)&0x1)<<WGM02);
 }
 
-//============
-//  public
-//============
-
-// Timer()
-//
-// Constructor
-Timer0::Timer0() {   
-  _my_timer0_ms = 0;
-  _my_timer0_us = 0;
-	_my_timer0_target = 0;
-  
-
-	TCCR0A = 0; // OC0A, OC0B disconnected. WGM01:WGM00 = 0
-	TCCR0B = 0; // FOC0A, FOC0B = 0, WGM00 = 0, Timer stopped
-
-}
-
-// ~Timer()
-//
-// Detructor
-Timer0::~Timer0() {
-	//TIMSK0 &=(~(1<<TOIE0)); // Disable interrupt
-	//Timer0::stop();					// Stop counting
-}
-
-// start()
-//
-//
-void Timer0::start(unsigned int ms) {
-  _my_timer0_ms = 0;
-  _my_timer0_us = 0;
-	_my_timer0_target = ms;
-  Timer0::stop();
-	TIMSK0 |= (1<<TOIE0);           // Enable overflow interrupt
-  sei();
-  TCNT0 = 0; 											// Set counter to 0
-  TCCR0B = (1<<CS01) | (1<<CS00); // (62.5ns)*(64PR)*(256) = 1024us
-}
-
-//
-//  done()
-//
-bool Timer0::done() { 
-  return(_my_timer0_ms >= _my_timer0_target);
-}
-
-//
-// stop()
-//
-void Timer0::stop(){
-    TCCR0B &= 0xF8;                 // Clear CS2-CS0
-}
-
-//
-// read()
-//
-unsigned long int Timer0::read(){
-    return( _my_timer0_ms );
-}
-
-//
-// MY_TIMER0_ISR()
-//
-#ifndef MY_TIMER0_OVF_ISR_FUNC
-#define MY_TIMER0_OVF_ISR_FUNC
-void MY_TIMER0_OVF_ISR(){
-  _my_timer0_us += 24;
-  _my_timer0_ms += (1+ int(_my_timer0_us/1000));
-  _my_timer0_us = _my_timer0_us%1000;
-  if(_my_timer0_ms >= _my_timer0_target && _my_timer0_target > 0)
-    TCCR0B &= 0xF8;                 // Clear CS2-CS0
+void tmr_setWGM1( uint8_t wgm )
+{
+	// TCCR1A[1:0] = WGM1[1:0]
+	TCCR1A &= ~0x3;
+	TCCR1A |= (0x3 & wgm);
+	// TCCR1B[4:3] = WGM0[3:2]
+	TCCR0B &= ~((1<<WGM13) | (1<<WGM12));
+	TCCR0B |= (((wgm>>2)&0x3)<<WGM12);
 	
 }
-#endif
 
-//
-// ISR Timer 0
-//
+void tmr_setWGM2( uint8_t wgm )
+{
+	// TCCR2A[1:0] = WGM2[1:0]
+	TCCR2A &= ~0x3;
+	TCCR2A |= (0x3 & wgm);
+	// TCCR2B[3] = WGM2[2]
+	TCCR2B &= ~(1<<WGM22);
+	TCCR2B |= (((wgm>>2)&0x1)<<WGM22);
 
-#ifndef TIMER0_OVF_ISR
-#define TIMER0_OVF_ISR
-ISR (TIMER0_OVF_vect) {
-  MY_TIMER0_OVF_ISR();
 }
 
-#endif
+//***********	CS ****************
+//
+// set clock select
+//
+void tmr_setCS0( uint8_t cs )
+{
+	// TCCR0B[2:0] = CS0[2:0]
+	TCCR0B &= ~0x7;
+	TCCR0B |= (cs & 0x7);
+}
 
+void tmr_setCS1( uint8_t cs )
+{
+	// TCCR1B[2:0] = CS1[2:0]
+	TCCR1B &= ~0x7;
+	TCCR1B |= (cs & 0x7);
+}
+
+void tmr_setCS2( uint8_t cs )
+{
+	// TCCR2B[2:0] = CS2[2:0]
+	TCCR2B &= ~0x7;
+	TCCR2B |= (cs & 0x7);
+}
+
+
+//*********** TOIE ****************
+//
+// set timer interrupt overflow enable
+//
+void tmr_setTOIE0( uint8_t toie )
+{
+	//TIMSK0 = TOIE
+	TIMSK0 = (TIMSK0 & ~0x1) | (toie & 0x1);
+}
+
+void tmr_setTOIE1( uint8_t toie )
+{
+	//TIMSK1 = TOIE
+	TIMSK1 = (TIMSK1 & ~0x1) | (toie & 0x1);
+}
+
+void tmr_setTOIE2( uint8_t toie )
+{
+	//TIMSK2 = TOIE
+	TIMSK2 = (TIMSK2 & ~0x1) | (toie & 0x1);
+}
+
+
+
+//*********** COM0x ****************
+//
+// Set Compare Output Match mode
+//
+
+// Timer 0
+void tmr_setCOM0A( uint8_t com )
+{
+	TCCR0A = (TCCR0A & ~0xC0) | ((0x3&com)<<COM0A0);
+}
+
+void tmr_setCOM0B( uint8_t com )
+{
+	TCCR0A = (TCCR0A & ~0x30) | ((0x3&com)<<COM0B0);
+}
+
+// Timer 1
+void tmr_setCOM1A( uint8_t com )
+{
+	TCCR1A = (TCCR1A & ~0xC0) | ((0x3&com)<<COM1A0);
+}
+
+void tmr_setCOM1B( uint8_t com )
+{
+	TCCR1A = (TCCR1A & ~0x30) | ((0x3&com)<<COM1B0);
+}
+
+// Timer 2
+void tmr_setCOM2A( uint8_t com )
+{
+	TCCR2A = (TCCR2A & ~0xC0) | ((0x3&com)<<COM2A0);
+}
+
+void tmr_setCOM2B( uint8_t com )
+{
+	TCCR2A = (TCCR2A & ~0x30) | ((0x3&com)<<COM2B0);
+}
 

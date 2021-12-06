@@ -12,7 +12,7 @@ INCLUDES= -I$(SRC_DIR)
 MCU=atmega328
 F_CPU=16000000
 CC=avr-gcc
-CFLAGS= -Wall -g -Os -mmcu=${MCU} -DF_CPU=${F_CPU} -I.
+CFLAGS= -Wall -g -Os -mmcu=${MCU} -DF_CPU=${F_CPU} 
 
 # Get list of source files
 SRC_FILES=$(shell cd $(SRC_DIR) && find *.cpp)
@@ -53,5 +53,6 @@ lib:
 # Remove makefile produced files
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(LIBINC_DIR)/*.h
 	rm $(LIB_DIR)/lib$(LIB_NAME).a
 

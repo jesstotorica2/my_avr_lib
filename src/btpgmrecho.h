@@ -35,7 +35,8 @@ class BTpgmrEcho {
 		uint8_t rd_stream( uint8_t* r, uint8_t rlen );
 		uint8_t rd_available();
 
-		void 		print(const char* d);
+		void 		print(	const char* d	);
+		void 		printnum( int num, uint8_t base = 10 );
 };
 
 
