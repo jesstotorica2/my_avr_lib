@@ -15,10 +15,11 @@
 #define UART_BR_SCALE16 FCLK/16UL
 #define UART_BR_SCALE8  FCLK/8UL
 
-unsigned char _myUART_CBUFF[myUART_BUFF_SIZE];
-int  _myUART_rd_ptr;
-int  _myUART_wr_ptr;
-bool _myUART_buff_ovrflw;
+unsigned char*	_myUART_CBUFF;
+uint16_t		_myUART_rd_ptr;
+uint16_t  		_myUART_wr_ptr;
+uint16_t 		_myUART_buff_size;
+bool 			_myUART_buff_ovrflw;
 
 //================
 //  private
@@ -83,7 +84,9 @@ void myUART::_set2x( uint8_t div_on )
 //================
 //  public
 //================
-myUART::myUART() {
+myUART::myUART(uint8_t *rxBuffer, uint16_t buffSize) {
+  _myUART_CBUFF = rxBuffer;
+  _myUART_buff_size = buffSize;
   _myUART_rd_ptr = 0;
   _myUART_wr_ptr = 0;
   buff_en = true;
@@ -272,7 +275,7 @@ bool myUART::overflow()
 }
 
 void _myUART_wr_buff(unsigned char x) {
-  int wrptr_nxt = ((_myUART_wr_ptr+1)%myUART_BUFF_SIZE);  
+  uint16_t wrptr_nxt = ((_myUART_wr_ptr+1)%_myUART_buff_size);  
   if(wrptr_nxt == _myUART_rd_ptr)   _myUART_buff_ovrflw = true;
   else {
     _myUART_CBUFF[_myUART_wr_ptr] = x;
@@ -285,12 +288,12 @@ unsigned char _myUART_rd_buff() {
   if( _myUART_rd_ptr == _myUART_wr_ptr ) {
     return 0;
   }else{
-    _myUART_rd_ptr = ((_myUART_rd_ptr+1)%myUART_BUFF_SIZE);
+    _myUART_rd_ptr = ((_myUART_rd_ptr+1)%_myUART_buff_size);
     return x;
   } 
 }
 
-
+/*
 //
 //  RX DATA ISR FUNCTION
 //
@@ -300,7 +303,7 @@ unsigned char _myUART_rd_buff() {
 #define MY_UART_ISR_FUNC
 void MY_UART_RX_ISR() {}
 #endif
-
+8/
 //
 // RX DATA ISR 
 //
@@ -313,6 +316,6 @@ ISR (USART_RX_vect) {
   MY_UART_RX_ISR();
 }
 #endif
-
+*/
 
 

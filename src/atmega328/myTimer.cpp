@@ -26,8 +26,8 @@ void tmr_setWGM1( uint8_t wgm )
 	TCCR1A &= ~0x3;
 	TCCR1A |= (0x3 & wgm);
 	// TCCR1B[4:3] = WGM0[3:2]
-	TCCR0B &= ~((1<<WGM13) | (1<<WGM12));
-	TCCR0B |= (((wgm>>2)&0x3)<<WGM12);
+	TCCR1B &= ~((1<<WGM13) | (1<<WGM12));
+	TCCR1B |= (((wgm>>2)&0x3)<<WGM12);
 	
 }
 

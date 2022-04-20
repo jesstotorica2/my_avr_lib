@@ -10,7 +10,9 @@
 void setOutput(int pin);
 void setInput(int pin);
 void setPin(int pin, int val);
+
 int  getPin(int pin);
+int  getPinDir(int pin);
 
 #define _NUM_PINS_ 20
 #define A0 14

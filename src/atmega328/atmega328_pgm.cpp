@@ -21,13 +21,17 @@
 //
 //	Constructor
 Atmega328_Programmer::Atmega328_Programmer(mySPI* s_ptr, myUART* u_ptr) {
-	if(s_ptr == nullptr) spi_ptr = (mySPI*)malloc(sizeof(mySPI));
-	else								 spi_ptr = s_ptr;
+	spi_ptr = s_ptr;
+	spi_ptr->set_highz();
+
 	#ifdef PGMR_DEBUG
 	if(u_ptr == nullptr) u_ptr = (myUART*)malloc(sizeof(myUART));
 	else								 u_ptr = u_ptr;
 	#endif
-
+	
+	setInput(SLV_RESET);    // Set input to tri-state
+	setPin(SLV_RESET, 0);
+	
 	// Initialize data members
 	pgmMode = false;
 	err_flag = 0;
@@ -87,8 +91,8 @@ bool Atmega328_Programmer::startProgrammingMode(){;
   pgm_byte_t resp[4];
  
  	setOutput(SPI_SCK);
-	setOutput(SLV_RESET);
 	setPin(SLV_RESET,1);
+	setOutput(SLV_RESET);
 	_delay_ms(100);
 
   // Set Reset low
@@ -108,13 +112,14 @@ bool Atmega328_Programmer::startProgrammingMode(){;
   
   // Check response for 0x53 echo on 3rd byte
 	if( resp[2] == 0x53 )	pgmMode = true;				// Mark programming mode success
-	else									endProgrammingMode();	// If failed, de-assert slave reset
+	else					endProgrammingMode();	// If failed, de-assert slave reset
   
   //Debug
   #ifdef PGMR_DEBUG
 	printResp(resp,4);
   #endif
 
+	
   return pgmMode;
 }
 
@@ -126,7 +131,9 @@ void Atmega328_Programmer::endProgrammingMode(){
 	if( pgmMode )
 		while( atmegaIsBusy() ) _delay_us(5);
 	
-	setPin(SLV_RESET, 1);
+
+	setInput(SLV_RESET);	// Set input to tri-state
+	setPin(SLV_RESET, 0);
 	pgmMode = false;
 }
 

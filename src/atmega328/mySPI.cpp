@@ -112,13 +112,13 @@ void mySPI::set_slv(){
 void mySPI::set_highz(){
 	
 	// Set I/O 
-  setPin(SPI_SCK, 0);
+  	setPin(SPI_SCK, 0);
 	setInput (SPI_SCK);  	// SCK
-  setPin(SPI_MISO, 0);
+  	setPin(SPI_MISO, 0);
 	setInput(SPI_MISO);  // MISO
-  setPin(SPI_MOSI, 0);
+  	setPin(SPI_MOSI, 0);
 	setInput (SPI_MOSI);  // MOSI
-  setPin(SPI_SS, 0);
+  	setPin(SPI_SS, 0);
 	setInput (SPI_SS);		// SS
 
 }

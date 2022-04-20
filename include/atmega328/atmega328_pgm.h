@@ -33,7 +33,7 @@ class Atmega328_Programmer {
 		// Public methods
 		Atmega328_Programmer(mySPI* s_ptr = nullptr, myUART* u_ptr = nullptr);
 		bool 				startProgrammingMode();
-	  void 				endProgrammingMode();
+		void 				endProgrammingMode();
 		bool 				inPgmMode();
 	 	pgm_byte_t	errFlag();
 

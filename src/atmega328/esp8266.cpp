@@ -19,22 +19,22 @@ BTpgmrEcho* bte_ptr; //DEBUG
 bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int timeout, const char* tkn)
 {
 	uint16_t rlen = 0;
-  bool tkn_found = false;
-  uint16_t tkn_len = strlen(tkn);
+	bool tkn_found = false;
+  	uint16_t tkn_len = strlen(tkn);
 
-  // Send data
-  if( data != nullptr ) uart_ptr->tr_str(data);
+	// Send data
+	if( data != nullptr ) uart_ptr->tr_str(data);
 
-  // If not getting response, return
-  if( rb_len == 0 ) return true;
+	// If not getting response, return
+	if( rb_len == 0 ) return true;
 
-  // Start timer
-  tmr_ptr->start(timeout);
-  while( !tmr_ptr->done() && !tkn_found ){
-    tkn_found = _recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );
-  }
-	tmr_ptr->stop();
-  return tkn_found;
+	// Start timer
+	tmr_ptr->start(timeout);
+	while( !tmr_ptr->done() && !tkn_found ){
+	  tkn_found = _recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );
+	}
+	  tmr_ptr->stop();
+	return tkn_found;
 } 
 
 //
@@ -103,7 +103,6 @@ bool esp8266::init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t rst_pin, unsigned lo
 	tmr_ptr = t_ptr;
 
 	esp8266_rst = rst_pin;
-	setOutput(esp8266_rst);
 	
 	esp8266::hw_rst();	
 
@@ -118,13 +117,29 @@ bool esp8266::init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t rst_pin, unsigned lo
 //
 // hw_rst()
 //
-// Hardware reset pulse to ESP8266
+// Hardware reset pulse to ESP8266.
+// NOTE: If a pin is set as an input prior to calling hw_rst, function assumes
+//       it is being used as an open-drain with external pull-up.
 void esp8266::hw_rst()
 {
+	int pinDir = getPinDir(esp8266_rst); // Record the pin direction
 	setPin(esp8266_rst, 0);
-	_delay_ms(1000);
-	setPin(esp8266_rst, 1);
-	_delay_ms(1000);
+	if( pinDir == 0 ) // Previously set as an input
+	{
+		setOutput(esp8266_rst); // Set as output to pull low
+	}
+	_delay_ms(500);
+
+	if( pinDir == 0 ) // Previously set as an input
+	{
+		setInput(esp8266_rst); // Set as input to tri-state
+	}
+	else
+	{
+		setPin(esp8266_rst, 1);
+	}
+	_delay_ms(500);
+
 	return;
 }
 
@@ -203,7 +218,7 @@ bool esp8266::listen(char* d, uint16_t dlen, const char* delimiter, uint16_t tim
 {
   uint16_t  idx = 0, idx_prev = 0;
   uint16_t  tkn_len;
-  bool 			data_recv_finished = false;
+  bool 		data_recv_finished = false;
   
   if(delimiter != nullptr)  tkn_len = strlen(delimiter);
   else                      tkn_len = 0;
@@ -220,9 +235,6 @@ bool esp8266::listen(char* d, uint16_t dlen, const char* delimiter, uint16_t tim
 			}
 		} 
   
-	//if( uart_ptr->available() && debug ) {
-  //   uart_ptr->printnum(tmr_ptr->read()); uart_ptr->print("\r\n"); //DEBUG
-  //  }
     data_recv_finished = _recv_to_buf(d, &idx, dlen, delimiter, tkn_len);
     
     if( idx > idx_prev ) // Reset timeout timer if data was received
@@ -231,9 +243,6 @@ bool esp8266::listen(char* d, uint16_t dlen, const char* delimiter, uint16_t tim
 			idx_prev = idx;
     }
   }
-
-  // Debug
-  //uart_ptr->printnum(time_s); uart_ptr->print(" s "); uart_ptr->printnum(tmr_ptr->read()); uart_ptr->print("ms listen     time\r\n");
 
   return true; // Return success if not timed out
 }
@@ -249,20 +258,60 @@ uint8_t esp8266::getConnectionIDs(char*d, uint16_t dlen)
 	uint8_t cnxn_byte = 0;
 	uint8_t link_id = 0;
 	char* cip_sts_ptr = nullptr;
-	char* str_ptr;
+	//char* str_ptr;
 	
 	if( send("AT+CIPSTATUS\r\n", d, dlen) )
 	{
-		str_ptr=d;
-		while( (cip_sts_ptr=strstr(str_ptr,"+CIPSTATUS:")) != nullptr )
+		//str_ptr=d;
+		//while( (cip_sts_ptr=strstr(str_ptr,"+CIPSTATUS:")) != nullptr )
+		if( (cip_sts_ptr=strstr(d,"+CIPSTATUS:")) != nullptr )
 		{
 			link_id = cip_sts_ptr[11] - 48;
 			cnxn_byte |= (1<<link_id);
-			str_ptr = (cip_sts_ptr+12);
+			//str_ptr = (cip_sts_ptr+12);
 		}
 	}
 
 	return cnxn_byte;
+}
+
+//
+//	getStatus
+//
+//	Polls esp8266 to get current status 'CIPSTATUS'. Returns integer value of status:
+//		0 - Failed to talk to ESP
+//		1 - Failed to find 'STATUS:' in ESP response
+//		2 - Connected to AP
+//		3 - TCP or UDP transmission has been created
+//		4 - TCP or UDP transmission of station is disconnected (?)
+//		5 - Station is NOT connected to an AP
+uint8_t esp8266::getStatus(char*d, uint16_t dlen)
+{
+	uint8_t statusVal = 0;
+	char* cip_sts_ptr = nullptr;
+	
+	if( send("AT+CIPSTATUS\r\n", d, dlen) )
+	{
+		if( (cip_sts_ptr = strstr(d,"STATUS:")) != nullptr )
+			statusVal = cip_sts_ptr[7] - 48;
+		else
+			statusVal = 1;
+	}
+	else
+		statusVal = 0;
+
+	return statusVal;
+}
+
+//
+//	connected
+//
+//	Polls esp8266 to get current status. Returns bool value
+//  signifying whether the station is connected to an AP
+bool esp8266::connected(char* d, uint16_t dlen)
+{
+	uint8_t sts = getStatus(d, dlen);
+	return(	sts > 1 && sts < 5 );
 }
 
 //

@@ -7,7 +7,6 @@
 #include "Stopwatch.h"
 
 #include <avr/io.h>
-//#include <avr/interrupt.h>
 #include "myTimer.h"
 #include "myInterrupt.h"
 
@@ -16,7 +15,7 @@
 //****************************************************
 
 unsigned long int   _my_stopwatch_ms;
-unsigned int  			_my_stopwatch_us;
+unsigned int  		_my_stopwatch_us;
 unsigned int        _my_stopwatch_target;
 
 //===========
@@ -118,10 +117,9 @@ unsigned long int Stopwatch::read(){
 }
 
 //
-// MY_STOPWATCH_OVF_FUNC()
+// _my_stopwatch_ovf_func()
 //
-#define MY_STOPWATCH_OVF_ISR
-void MY_STOPWATCH_OVF_FUNC()
+void _my_stopwatch_ovf_func()
 {
 	// Timer is past target, don't count. (target=0 is continuous mode)
 	if( (_my_stopwatch_ms >= _my_stopwatch_target) && (_my_stopwatch_target > 0) );
@@ -136,15 +134,6 @@ void MY_STOPWATCH_OVF_FUNC()
 		}
   }
 }
-
-//
-// ISR Timer 0 overflow
-//
-/*
-ISR (TIMER0_OVF_vect) {
-  MY_STOPWATCH_OVF_ISR_FUNC();
-}
-*/
 
 
 

@@ -26,6 +26,7 @@ class Stopwatch {
 		unsigned long int read();
 };
 
+void _my_stopwatch_ovf_func();
 
 #endif
 

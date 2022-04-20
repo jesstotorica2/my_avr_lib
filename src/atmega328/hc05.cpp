@@ -259,7 +259,7 @@ int hc05::get_state()
 //	Listen for data froma bluetooth connection
 bool hc05::listen(char* d, int dlen, const char* delimiter, int timeout_s)
 {
-	int  idx = 0, idx_prev = 0;
+	int  idx = 0; //, idx_prev = 0;
 	int  tkn_len;
 	int  time_s = 0;
 	bool data_recv_finished = false;

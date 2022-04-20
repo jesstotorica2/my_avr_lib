@@ -1,15 +1,22 @@
-# Directories
-LIB_NAME=my_avr
+#
+# atmega328 build lib
+#
+MCU=atmega328
+LIB_NAME=my_$(MCU)
 
-SRC_DIR=../../src
+
+SRC_DIR=../../src/$(MCU)
 BUILD_DIR=./object_files
 LIB_DIR=../../lib
-LIBINC_DIR=../../include
+LIBINC_DIR=../../include/$(MCU)
 
 INCLUDES= -I$(SRC_DIR) 
 
+# Sources to place in include file.
+# This should be files that need to be compiled with the main.cpp project
+INCLUDE_SRCS= $(SRC_DIR)/myInterrupt.cpp
+
 # Compiler/MCU options
-MCU=atmega328
 F_CPU=16000000
 CC=avr-gcc
 CFLAGS= -Wall -g -Os -mmcu=${MCU} -DF_CPU=${F_CPU} 
@@ -41,6 +48,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 # Compile object files
 compile: dirs $(SRC_OBJ)
 	@cp $(SRC_DIR)/*.h $(LIBINC_DIR)
+	echo $(INCLUDE_SRCS)
+	@cp $(INCLUDE_SRCS) $(LIBINC_DIR)
 
 # Create shared library
 lib:
