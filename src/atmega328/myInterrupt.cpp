@@ -33,6 +33,18 @@ ISR( TIMER0_OVF_vect )
 	MY_TIMER0_OVF_FUNC();
 }
 
+
+//
+// Timer 1
+//
+ISR( TIMER1_OVF_vect )
+{
+#ifdef TIMEDDATALOG_SAMPLE
+	timeddatalog_tmr1_ovf();
+#endif
+}
+
+
 //
 // SPI
 //
