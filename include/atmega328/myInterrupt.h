@@ -15,7 +15,7 @@ void dummy();
 // UART RX - recieved byte interrupt
 void MY_UART_RX_FUNC();
 
-//================== Timer0 =================//
+//================== Timers =================//
 
 // - Timer0 ISR
 void MY_TIMER0_OVF_FUNC();

@@ -48,8 +48,9 @@ class esp8266 {
 		bool			connected(char *d, uint16_t dlen);
 		uint8_t 		waitConnect(char* d, uint16_t dlen, uint16_t timeout_ms = 0);
 		uint8_t 		waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms = 0);
-		bool 			CIPsend(uint8_t link_id, const char* data, uint16_t dataLen = 0, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000 );		
-	
+		bool 			CIPsend(uint8_t link_id, const char* data, uint16_t dataLen = 0, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);		
+		bool 			CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);	
+		bool 			CIPclose(uint8_t link_id, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);	
 }; // esp8266
 
 #endif

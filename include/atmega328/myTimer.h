@@ -9,6 +9,19 @@
 
 #include "mystdlib.h"
 
+//
+// Macros
+//
+
+#define TIMER1_WGM_NORMAL 		0x0
+#define TIMER1_WGM_PWM_OCR1A 	0xF
+
+#define TIMER1_CS_DIV1024		0x5
+
+//
+// Methods
+//
+
 // Waveform Generation Mode (WGM)
 void tmr_setWGM0( uint8_t wgm );
 void tmr_setWGM1( uint8_t wgm );
