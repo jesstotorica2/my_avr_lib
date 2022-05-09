@@ -37,10 +37,10 @@ void Stopwatch::clearPSR(){
 //
 // Constructor
 Stopwatch::Stopwatch(uint8_t tmr) {   
-  _my_stopwatch_ms = 0;
-  _my_stopwatch_us = 0;
+	_my_stopwatch_ms = 0;
+	_my_stopwatch_us = 0;
 	_my_stopwatch_target = 0;
-  tmrVal = ( tmr < 3 ) ? tmr : 2;
+	tmrVal = ( tmr < 3 ) ? tmr : 2;
 }
 
 // ~Timer()
@@ -55,28 +55,29 @@ Stopwatch::~Stopwatch() {
 //
 // Start assumes that its timer is set in Normal mode (WGM=0) or in a
 // 8-bit PWM mode. If WGM is changed to something else timer will not work accurately
-void Stopwatch::start(unsigned int ms) {
-  _my_stopwatch_ms = 0;
-  _my_stopwatch_us = 0;
+void Stopwatch::start(unsigned int ms) 
+{
+	_my_stopwatch_ms = 0;
+	_my_stopwatch_us = 0;
 	_my_stopwatch_target = ms;
 	
 	if(tmrVal == 0) // Timer0
-	{																		// WGM must equal 0 or 3 for this to work
-		tmr_setTOIE0(1);           				// Enable overflow interrupt
-		tmr_setCS0(0x3); 									// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
+	{										// WGM must equal 0 or 3 for this to work
+		tmr_setTOIE0(1);           			// Enable overflow interrupt
+		tmr_setCS0(0x3); 					// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
 		_my_stopwatch_us = 1024 - TCNT0; 	// Read remaining us for current count
 	
 	}
 	else if(tmrVal == 1)
 	{
-		tmr_setTOIE1(1);           				// Enable overflow interrupt
-		tmr_setCS1(0x3); 									// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
+		tmr_setTOIE1(1);           			// Enable overflow interrupt
+		tmr_setCS1(0x3); 					// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
 		_my_stopwatch_us = 1024 - TCNT1; 	// Read remaining us for current count	
 	}
 	else if(tmrVal == 2)
 	{
-		tmr_setTOIE2(1);           				// Enable overflow interrupt
-		tmr_setCS1(0x4); 									// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
+		tmr_setTOIE2(1);           			// Enable overflow interrupt
+		tmr_setCS1(0x4); 					// Set counter rate (62.5ns)*(64PR)*(256) = 1024us
 		_my_stopwatch_us = 1024 - TCNT2; 	// Read remaining us for current count	
 	}	
 	
