@@ -453,7 +453,7 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 // Sends data to a given link id. If data length is not provided (is zero), length will be calculated with strlen() (wont 
 // work for non-string data). If a response buffer is not provided data will be sent without confirming response from ESP8266
 // and function will always return true.
-bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char* resp, uint16_t rlen, uint16_t timeout_ms )
+bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char* resp, uint16_t rlen, uint16_t timeout_ms)
 {
 	char cip_cmd[20] = "AT+CIPSEND=0,";  // 20 bytes leaves room for values up to 9999 (+\r\n\0) - max ESP pkt is 2048	
 	cip_cmd[11] = (link_id+48);
@@ -466,13 +466,44 @@ bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char*
 	{
 		if( rlen == 0 ) _delay_ms(3);
 		// Ready to send (send it!)
-		//bte_ptr->print(data); bte_ptr->print(" data\n");
 		if( esp8266::tr( (uint8_t*)data, dataLen, resp, rlen, timeout_ms, "SEND OK" ) ) return true;
-		else 																																						return false;
+		else																			return false;
 			
 	}
 	else
 		return false;
 
 }
+
+//
+// CIPstart()
+//
+// Start a connection on the specified link id with a given server IP address on a given port.
+bool esp8266::CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, char* resp, uint16_t rlen, uint16_t timeout_ms)
+{
+	char port_str[6];
+	itoa(port, port_str, 10);  // Translate port into string
+	
+	uart_ptr->tr_str("AT+CIPSTART=");
+	uart_ptr->tr(link_id+48);
+	uart_ptr->tr_str(",\"");
+	uart_ptr->tr_str(serverIP);
+	uart_ptr->tr_str("\",");
+	uart_ptr->tr_str(port_str);
+
+	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n>" ) );
+}
+
+//
+// CIPclose()
+//
+// Close connection on a given link ID
+bool esp8266::CIPclose(uint8_t link_id, char* resp, uint16_t rlen, uint16_t timeout_ms)
+{
+	uart_ptr->tr_str("AT+CIPCLOSE=");
+	uart_ptr->tr(link_id+48);
+	
+	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n>" ) );
+}
+
 
