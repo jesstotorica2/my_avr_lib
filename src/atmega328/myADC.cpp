@@ -67,6 +67,7 @@ void myADC::enable(bool en)
 //
 void myADC::start_conversion()
 {
+	if( ADCSRA & (1<<7) )
 	ADCSRA = (ADCSRA | (0x1<<6));
 }
 
@@ -75,8 +76,11 @@ void myADC::start_conversion()
 //
 void myADC::conversion_wait()
 {
-	while( (ADCSRA & (0x1 << 4)) == 0 ); // While ADIF == 0
-	_delay_ms(1); // DEBUG!!!!
+	if( ADCSRA & (1<<7) ) // Ensure ADC is enabled so we dont get stuck
+	{
+		while( (ADCSRA & (0x1 << 4)) == 0 ); // While ADIF == 0
+		//_delay_ms(1); // DEBUG!!!!
+	}
 }
 
 //

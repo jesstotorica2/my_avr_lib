@@ -106,7 +106,7 @@ bool Stopwatch::done() {
 //	Stops counter from running through increment calculations on each interrupt.
 //	Does not disable interrupt!
 void Stopwatch::stop(){
-		_my_stopwatch_target = 1;
+	_my_stopwatch_target = 1;
     _my_stopwatch_ms = 1;
 }
 

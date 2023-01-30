@@ -23,6 +23,7 @@ bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int 
   	uint16_t tkn_len = strlen(tkn);
 
 	// Send data
+	uart_ptr->flush();
 	if( data != nullptr ) uart_ptr->tr_str(data);
 
 	// If not getting response, return
@@ -33,7 +34,8 @@ bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int 
 	while( !tmr_ptr->done() && !tkn_found ){
 	  tkn_found = _recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );
 	}
-	  tmr_ptr->stop();
+	tmr_ptr->stop();
+	
 	return tkn_found;
 } 
 
@@ -73,10 +75,10 @@ bool esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn
 // esp8266()
 //
 // Constructor
-/*esp8266::esp8266()
+esp8266::esp8266()
 {
 	esp8266_rst = 2;
-}*/
+}
 
 //DEBUG!!!!!!!!!!!!!!
 esp8266::esp8266(BTpgmrEcho* b_p)
@@ -98,20 +100,13 @@ esp8266::~esp8266()
 // Initialize ESP8266 module
 bool esp8266::init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t rst_pin, unsigned long int br)
 {
-	char setbr_resp[48];
+	//char setbr_resp[48];
 	uart_ptr = u_ptr;
 	tmr_ptr = t_ptr;
 
 	esp8266_rst = rst_pin;
 	
-	esp8266::hw_rst();	
-
-	uart_ptr->set_br(9600); // Assume 9600 default for all ESP8266 (NOTE: dont change default)
-	
-	if( setBaudRate(br, setbr_resp, 48) )
-		return true;
-	else 
-		return false;
+	return( resetBaudRate(br) );
 }
 
 //
@@ -161,17 +156,35 @@ bool esp8266::tr(const uint8_t* data, uint16_t dlen, char* resp, uint16_t rb_len
 // Send data to ESP8266, recieve data to given response buffer pointer
 bool esp8266::send(const char* data, char* resp, uint16_t rb_len, uint16_t timeout, const char* tkn) 
 {
-  if(resp == nullptr) 
+	if(resp == nullptr) 
 	{
-    rb_len = 0;
-  }
-
-  if(tkn == nullptr) 
+		rb_len = 0;
+	}
+	
+	if(tkn == nullptr) 
 	{
-  	return( _send(data, resp, rb_len, timeout, ESP8266_SUCCESS_RESP) );
+		return( _send(data, resp, rb_len, timeout, ESP8266_SUCCESS_RESP) );
 	}
 	else
- 		return( _send(data,resp,rb_len,timeout,tkn) );
+		return( _send(data,resp,rb_len,timeout,tkn) );
+}
+
+//
+// resetBaudRate()
+//
+// This function first runs a hardware reset to set the es8266 back to default rate. Then resets
+// baud rate to desired value 'br'. If the 'def_br' is not correct the function will fail. (Assumes 9600)
+// Returns true on success
+bool esp8266::resetBaudRate(long unsigned int br, long unsigned int def_br)
+{
+	char setbr_resp[48];
+	this->hw_rst();
+	uart_ptr->set_br(def_br); // Assume 9600 default for all ESP8266 (NOTE: dont change default)
+	
+	if( setBaudRate(br, setbr_resp, 48) )
+		return true;
+	else 
+		return false;	
 }
 
 //
@@ -190,6 +203,15 @@ bool esp8266::setBaudRate(long unsigned int br, char* rbuf, uint16_t rlen, uint1
 	}
 	else
 		return false;
+}
+
+//
+// poke()
+//
+bool esp8266::poke(uint16_t timeout)
+{
+	char ack_resp[8];
+	return( send("AT\r\n", ack_resp, 8, timeout) );
 }
 
 //
@@ -228,19 +250,19 @@ bool esp8266::listen(char* d, uint16_t dlen, const char* delimiter, uint16_t tim
   while( !data_recv_finished )
   {
     if( timeout_ms > 0 )
+	{
+		if( tmr_ptr->done() )
 		{
-			if( tmr_ptr->done() )
-			{
-				return false;
-			}
-		} 
+			return false;
+		}
+	} 
   
     data_recv_finished = _recv_to_buf(d, &idx, dlen, delimiter, tkn_len);
     
     if( idx > idx_prev ) // Reset timeout timer if data was received
     {
-      tmr_ptr->reset();
-			idx_prev = idx;
+    	tmr_ptr->reset();
+		idx_prev = idx;
     }
   }
 
@@ -258,17 +280,13 @@ uint8_t esp8266::getConnectionIDs(char*d, uint16_t dlen)
 	uint8_t cnxn_byte = 0;
 	uint8_t link_id = 0;
 	char* cip_sts_ptr = nullptr;
-	//char* str_ptr;
 	
 	if( send("AT+CIPSTATUS\r\n", d, dlen) )
 	{
-		//str_ptr=d;
-		//while( (cip_sts_ptr=strstr(str_ptr,"+CIPSTATUS:")) != nullptr )
 		if( (cip_sts_ptr=strstr(d,"+CIPSTATUS:")) != nullptr )
 		{
 			link_id = cip_sts_ptr[11] - 48;
 			cnxn_byte |= (1<<link_id);
-			//str_ptr = (cip_sts_ptr+12);
 		}
 	}
 
@@ -304,6 +322,49 @@ uint8_t esp8266::getStatus(char*d, uint16_t dlen)
 }
 
 //
+// getIP
+//	
+// Returns the IP of ESP8266 in the for of a 32-bit value. Returns 0 if fails
+// +CIFSR:STAIP,"192.168.1.200"{h0D}
+uint32_t esp8266::getIP(char* d, uint16_t dlen)
+{
+	if( send("AT+CIFSR\r\n", d, dlen) )
+	{
+		char* ip_str;
+		ip_str = strstr(d, ":STAIP,\"");
+		if( ip_str != nullptr )
+		{	
+			char ip_byte_str[4];
+			uint16_t byte_cnt = 0;
+			uint32_t ip = 0;
+			ip_str = (ip_str+sizeof(":STAIP,\"")-1);
+			for( int i = 0, j = 0; ip_str[i] != '\0' && byte_cnt < 4; i++, j++ )
+			{	
+				if( j > 3 ) // Went more than 3 spaces without finding '.' or '"'
+				{
+					return 0;
+				}
+				else if( ip_str[i] == '.' || ip_str[i] == '"' )
+				{
+					ip_byte_str[j] = '\0'; // Cap off the ip byte string
+					ip = (ip << 8) | atoi(ip_byte_str); // Convert string to integer and shift into IP 
+					byte_cnt += 1;
+					j = -1;
+					if( byte_cnt == 4 && ip_str[i] != '"' ) return 0;
+					else 									return ip;
+
+				}
+				else
+				{
+					ip_byte_str[j] = ip_str[i];
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+//
 //	connected
 //
 //	Polls esp8266 to get current status. Returns bool value
@@ -333,7 +394,7 @@ uint8_t esp8266::waitConnect(char* d, uint16_t dlen, uint16_t timeout_ms)
 			if(	d[1] == ',' )
 			{
 				link_id = (d[0] - 48);
-				cnxn_byte = (1<<link_id);
+				cnxn_byte |= (1<<link_id);
 			}
 			else
 				cnxn_byte = getConnectionIDs(d,dlen);
@@ -354,12 +415,12 @@ uint8_t esp8266::waitConnect(char* d, uint16_t dlen, uint16_t timeout_ms)
 uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 {
 	const char* ipd_tkn = "\r\n+IPD,";
-  uint16_t  idx = 0;
-	uint16_t  max_dlen = *dlen;
+  	uint16_t  	idx = 0;
+	uint16_t  	max_dlen = *dlen;
 	uint8_t		link_id = 0xFF;
  	uint16_t 	numStrLen = 0, num = 0;
-  bool 			is_ipd = false; // Assume true until proven false
-	char 			c = 0;
+  	bool 		is_ipd = false; // Assume true until proven false
+	char 		c = 0;
 
   if( timeout_ms > 0 ) tmr_ptr->start(timeout_ms); // Start timer (if timeout provided)
   
@@ -383,7 +444,7 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 			{
 				if( idx >= (max_dlen-1) ) // Guard from buffer overflow (-1 for the null char)
 				{
-					return 0xFF;
+					return 0xFE;
 				}
 				
 				// Read char
@@ -401,12 +462,12 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 
 				if( idx < 7 ) // Looking for "+IPD," str
 				{
-					if( c != ipd_tkn[idx] )	return 0xFF; // Check recieved char is correct 
+					if( c != ipd_tkn[idx] )	return 0xFD; // Check recieved char is correct 
 				}
 				else if( idx == 7 ) // 8th char has to be link id
 				{
 					link_id = c - 48;
-					if( link_id > 4 ) return 0xFF; // check its in valid range 0-4
+					if( link_id > 4 ) return 0xFC; // check its in valid range 0-4
 				}
 				else if( idx > 8 )
 				{
@@ -421,7 +482,7 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 						uart_ptr->read(); 
 					}
 					else
-						return 0xFF;
+						return 0xFB;
 				}
 				
 				if( idx != 0 )	
@@ -478,7 +539,7 @@ bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char*
 //
 // CIPstart()
 //
-// Start a connection on the specified link id with a given server IP address on a given port.
+// Starts a TCP connection on the specified link id with a given server IP address on a given port.
 bool esp8266::CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, char* resp, uint16_t rlen, uint16_t timeout_ms)
 {
 	char port_str[6];
@@ -486,7 +547,7 @@ bool esp8266::CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, cha
 	
 	uart_ptr->tr_str("AT+CIPSTART=");
 	uart_ptr->tr(link_id+48);
-	uart_ptr->tr_str(",\"");
+	uart_ptr->tr_str(",\"TCP\",\"");
 	uart_ptr->tr_str(serverIP);
 	uart_ptr->tr_str("\",");
 	uart_ptr->tr_str(port_str);

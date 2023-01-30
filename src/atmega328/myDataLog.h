@@ -18,10 +18,10 @@ class DataLog
 		int 		wr_ptr;
 		int 		size;
 		
-		DataLog(void* log_buffer, int size);
+		DataLog(void* log_buffer, int log_size);
 		~DataLog();
 		
-		void* read(int idx);
+		void* read(int idx, int* wr_ptr_ref = nullptr);
 		void write(void* data);
 
 	private:

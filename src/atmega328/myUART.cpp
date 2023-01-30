@@ -20,7 +20,8 @@ uint16_t		_myUART_rd_ptr;
 uint16_t  		_myUART_wr_ptr;
 uint16_t 		_myUART_buff_size;
 bool 			_myUART_buff_ovrflw;
-
+uint16_t rd_ptr(){return _myUART_rd_ptr;}
+uint16_t wr_ptr(){return _myUART_wr_ptr;}
 //================
 //  private
 //================

@@ -25,7 +25,7 @@ class Stopwatch {
 	void stop();
     bool done();
 
-		unsigned long int read();
+	unsigned long int read();
 };
 
 void _my_stopwatch_ovf_func();

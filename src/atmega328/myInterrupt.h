@@ -7,6 +7,7 @@
 #include <avr/interrupt.h>
 #include "myUART.h"
 #include "Stopwatch.h"
+#include "myTimedDataLog.h"
 
 void dummy();
 

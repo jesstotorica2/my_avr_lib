@@ -15,6 +15,7 @@
 #ifndef _ESP8266_H_
 #define _ESP8266_H_
 
+#define ESP8266_DEFAULT_BR	 9600
 #define ESP8266_SUCCESS_RESP "OK\r\n"
 
 // Commands
@@ -33,18 +34,21 @@ class esp8266 {
 
 
 	public:
-		//esp8266(); DEBUG!!!!!!!
+		esp8266();
 		esp8266(BTpgmrEcho* b_p);
 		~esp8266();
 		bool 			init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t rst_pin, unsigned long int br);
 		void 			hw_rst();
 		bool 			tr(const uint8_t* data, uint16_t dlen, char* resp = nullptr, uint16_t rb_len = 0, uint16_t timeout = 5000, const char* tkn = nullptr);
 		bool 			send(const char* data, char* resp = nullptr, uint16_t rb_len = 0, uint16_t timeout = 5000, const char* tkn = nullptr);
+		bool			resetBaudRate(unsigned long int br, unsigned long int def_br=ESP8266_DEFAULT_BR);
 		bool 			setBaudRate(unsigned long int br, char* rbuf, uint16_t rlen, uint16_t timeout = 5000);
+		bool 			poke(uint16_t timeout);
 		bool 			connectWifi(const char* ssid, const char* pswd, char* rbuf, uint16_t rblen);
 		bool 			listen(char* d, uint16_t dlen, const char* delimiter = nullptr, uint16_t timeout_ms = 0);
 		uint8_t			getConnectionIDs(char*d, uint16_t dlen);
 		uint8_t			getStatus(char *d, uint16_t dlen);
+		uint32_t 		getIP(char* d, uint16_t dlen);
 		bool			connected(char *d, uint16_t dlen);
 		uint8_t 		waitConnect(char* d, uint16_t dlen, uint16_t timeout_ms = 0);
 		uint8_t 		waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms = 0);

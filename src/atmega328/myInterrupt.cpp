@@ -37,10 +37,20 @@ ISR( TIMER0_OVF_vect )
 //
 // Timer 1
 //
+
+//#ifndef MY_TIMER1_OVF_ISR
+//#define MY_TIMER1_OVF_ISR
+//void MY_TIMER1_OVF_FUNC(){}
+//#endif
+
 ISR( TIMER1_OVF_vect )
 {
 #ifdef TIMEDDATALOG_SAMPLE
 	timeddatalog_tmr1_ovf();
+#endif
+
+#ifdef MY_TIMER1_OVF_ISR
+	MY_TIMER1_OVF_FUNC();
 #endif
 }
 

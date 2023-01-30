@@ -27,17 +27,17 @@ class TimedDataLog : public DataLog
 		TimedDataLog(uint16_t ts, void* log_buffer, int size);
 		~TimedDataLog();
 
-		unsigned long timestamp;			// Timestamp of latest data log
-		unsigned long timestamp_rollover;	// Rollover limit of timestamp
-		uint16_t tsteps;					// Timestep roll over limit	
-		uint16_t tstep_count;				// Current timestep count
-		int 	 points_logged;				// Number of data points logged. This is reset on start and when tsteps changes
+		uint32_t timestamp;				// Timestamp of latest data log
+		uint32_t timestamp_rollover;	// Rollover limit of timestamp
+		uint16_t tsteps;				// Timestep roll over limit	
+		uint16_t tstep_count;			// Current timestep count
+		int 	 points_logged;			// Number of data points logged. This is reset on start and when tsteps changes
 
-		void start(uint16_t t = 0);			// Start log at time t
+		void start(uint32_t t = 0);			// Start log at time t
 		void resume();						// Pick where we left off
 		void stop();						// Stop logging
 		
-		void time_align(uint16_t t);	// Align logging to time t. Takes a sample immediately and sets timestamp=t 
+		void time_align(uint32_t t);	// Align logging to time t. Takes a sample immediately and sets timestamp=t 
 		void set_tsteps(uint16_t ts);
 		uint16_t get_time();		  	// Returns timestamp+tstep_count
 

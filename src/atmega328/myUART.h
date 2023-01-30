@@ -51,5 +51,8 @@ class myUART
 void _myUART_wr_buff(unsigned char x);
 unsigned char _myUART_rd_buff();
 
+
+uint16_t rd_ptr();
+uint16_t wr_ptr();
 #endif
 
