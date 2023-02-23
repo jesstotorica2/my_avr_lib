@@ -43,6 +43,7 @@ Atmega328_Programmer::Atmega328_Programmer(mySPI* s_ptr, myUART* u_ptr) {
 //
 //	Send data
 void Atmega328_Programmer::sendSPI(pgm_byte_t* data, pgm_byte_t* resp, int len, int check_rbyte) {
+  setPin(SPI_MISO, 1); // Set weak-pull up
   spi_ptr->send(data, resp, len);
 	if( check_rbyte > 0 ) {
 		if( pgmMode && err_flag == 0 && resp[check_rbyte] != data[check_rbyte-1] ){ 
@@ -90,18 +91,21 @@ bool Atmega328_Programmer::startProgrammingMode(){;
   pgm_byte_t prgm_en[4] = SPI_PROGRAM_EN;	
   pgm_byte_t resp[4];
  
- 	setOutput(SPI_SCK);
-	setPin(SLV_RESET,1);
-	setOutput(SLV_RESET);
-	_delay_ms(100);
+  setPin(SPI_SCK, 0);
+  setOutput(SPI_SCK);
+  setPin(SLV_RESET,1);
+  _delay_ms(100);
 
   // Set Reset low
   setPin(SLV_RESET, 0);
+  setOutput(SLV_RESET);
   _delay_ms(5);
 
    // Pulse Reset at least 2 cc
+  setInput(SLV_RESET);
   setPin(SLV_RESET, 1);
-  _delay_ms(1);
+  _delay_ms(1); 
+  setOutput(SLV_RESET);
   setPin(SLV_RESET, 0);
  
   // Delay 20 ms
@@ -111,8 +115,8 @@ bool Atmega328_Programmer::startProgrammingMode(){;
   sendSPI(prgm_en,resp,4); 
   
   // Check response for 0x53 echo on 3rd byte
-	if( resp[2] == 0x53 )	pgmMode = true;				// Mark programming mode success
-	else					endProgrammingMode();	// If failed, de-assert slave reset
+  if( resp[2] == 0x53 )	pgmMode = true;			// Mark programming mode success
+  else					endProgrammingMode();	// If failed, de-assert slave reset
   
   //Debug
   #ifdef PGMR_DEBUG
@@ -131,7 +135,6 @@ void Atmega328_Programmer::endProgrammingMode(){
 	if( pgmMode )
 		while( atmegaIsBusy() ) _delay_us(5);
 	
-
 	setInput(SLV_RESET);	// Set input to tri-state
 	setPin(SLV_RESET, 0);
 	pgmMode = false;
@@ -306,7 +309,59 @@ void Atmega328_Programmer::wrPmem(int addr, pgm_byte_t* data, int blen) {
 }
 
 
+//
+// readFuseByte()
+// 
+// 0 - Low byte
+// 1 - High byte
+// 2 - Extended byte
+pgm_byte_t  Atmega328_Programmer::readFuseByte(pgm_byte_t idx)
+{
+	pgm_byte_t resp[4];
+	if( idx == FUSE_BYTE_LOW_IDX )
+	{
+		pgm_byte_t cmd[4] = RD_FUSE_BITS;
+		sendSPI(cmd,resp, 4);
+	}
+	else if( idx == FUSE_BYTE_HIGH_IDX )
+	{
+		pgm_byte_t cmd[4] = RD_FUSE_HBITS;
+		sendSPI(cmd,resp, 4);
+	}
+	else if( idx == FUSE_BYTE_EXT_IDX )
+	{
+		pgm_byte_t cmd[4] = RD_EXT_FUSE_BITS;
+		sendSPI(cmd,resp, 4);
+	}
+	else
+	{
+		return 0xFF;
+	}
+	return resp[3];
+}
 
+//
+// setFuseByte()
+//
+void Atmega328_Programmer::setFuseByte(pgm_byte_t idx, pgm_byte_t fbyte)
+{
+	pgm_byte_t resp[4];
+	if( idx == FUSE_BYTE_LOW_IDX )
+	{
+		pgm_byte_t cmd[4] = WR_FUSE_BITS(fbyte);
+		sendSPI(cmd,resp, 4);
+	}
+	else if( idx == FUSE_BYTE_HIGH_IDX )
+	{
+		pgm_byte_t cmd[4] = WR_FUSE_HBITS(fbyte);
+		sendSPI(cmd,resp, 4);
+	}
+	else if( idx == FUSE_BYTE_EXT_IDX )
+	{
+		pgm_byte_t cmd[4] = WR_EXT_FUSE_BITS(fbyte);
+		sendSPI(cmd,resp, 4);
+	}
+}
 
 
 #ifdef PGMR_DEBUG
@@ -316,7 +371,7 @@ void Atmega328_Programmer::printResp(pgm_byte_t* resp, int len){
     for(int i = 0; i < len; i++ ){
       uart_ptr->print(" 0x");
       uart_ptr->printnum((int)resp[i], 16);
-      if( i == len-1 ) uart_ptr->print("}");
+      if( i == len-1 ) uart_ptr->print(" }");
       else uart_ptr->print(",");
     }
     

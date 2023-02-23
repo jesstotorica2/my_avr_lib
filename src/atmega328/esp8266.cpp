@@ -339,7 +339,7 @@ uint32_t esp8266::getIP(char* d, uint16_t dlen)
 			uint32_t ip = 0;
 			ip_str = (ip_str+sizeof(":STAIP,\"")-1);
 			for( int i = 0, j = 0; ip_str[i] != '\0' && byte_cnt < 4; i++, j++ )
-			{	
+			{
 				if( j > 3 ) // Went more than 3 spaces without finding '.' or '"'
 				{
 					return 0;
@@ -350,9 +350,11 @@ uint32_t esp8266::getIP(char* d, uint16_t dlen)
 					ip = (ip << 8) | atoi(ip_byte_str); // Convert string to integer and shift into IP 
 					byte_cnt += 1;
 					j = -1;
-					if( byte_cnt == 4 && ip_str[i] != '"' ) return 0;
-					else 									return ip;
-
+					if( byte_cnt >= 4 )
+					{
+						if( ip_str[i] != '"' ) return 0;
+						else 				   return ip;
+					}
 				}
 				else
 				{
@@ -552,7 +554,7 @@ bool esp8266::CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, cha
 	uart_ptr->tr_str("\",");
 	uart_ptr->tr_str(port_str);
 
-	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n>" ) );
+	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n" ) );
 }
 
 //

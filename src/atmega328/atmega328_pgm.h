@@ -35,10 +35,10 @@ class Atmega328_Programmer {
 		bool 				startProgrammingMode();
 		void 				endProgrammingMode();
 		bool 				inPgmMode();
-	 	pgm_byte_t	errFlag();
+	 	pgm_byte_t			errFlag();
 
 		void 				ldPgBuff(int staddr, pgm_byte_t* data, int blen);
-		pgm_byte_t 	rdPmemByte(int addr, bool high);
+		pgm_byte_t 			rdPmemByte(int addr, bool high);
 		void				cpPmemToBuff(int addr, int endaddr);
 		void				wrPgBuff(int addr, pgm_byte_t hbyte, pgm_byte_t lbyte);
 		void				wrPgToPmem(int addr, bool block = true);
@@ -46,6 +46,8 @@ class Atmega328_Programmer {
 		int  				atmegaIsBusy();
 		void				atmegaChipErase(bool block = false);
 		void				wrPmem(int staddr, pgm_byte_t* data, int blen);
+		pgm_byte_t  		readFuseByte(pgm_byte_t idx);
+		void 				setFuseByte(pgm_byte_t idx, pgm_byte_t fbyte);
 
 	private:
 		// Data members
@@ -121,5 +123,11 @@ class Atmega328_Programmer {
 #define WR_FUSE_BITS(byte_in) {0xAC, 0xA0, 0x00, byte_in}
 #define WR_FUSE_HBITS(byte_in) {0xAC, 0xA8, 0x00, byte_in}
 #define WR_EXT_FUSE_BITS(byte_in) {0xAC, 0xA4, 0x00, byte_in}
+
+
+// Fuse byte indexes
+#define FUSE_BYTE_LOW_IDX 0
+#define FUSE_BYTE_HIGH_IDX 1
+#define FUSE_BYTE_EXT_IDX 2 
 
 #endif
