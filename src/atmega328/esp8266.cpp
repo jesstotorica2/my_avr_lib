@@ -229,7 +229,7 @@ bool esp8266::connectWifi(const char* ssid, const char* pswd, char* rbuf, uint16
 	cmd_ptr = strcat(jap_cmd, pswd);
 	cmd_ptr = strcat(jap_cmd, "\"\r\n");
 	
-	return( send(cmd_ptr, rbuf, rblen, 15000) );
+	return( send(cmd_ptr, rbuf, rblen, 20000) );
 }
 
 //
@@ -434,7 +434,7 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 		{
 			if( tmr_ptr->done() )
 			{
-				bte_ptr->print(d); bte_ptr->print(" d\n");
+				//bte_ptr->print(d); bte_ptr->print(" d\n");
 				return 0xFF;
 			}
 		} 

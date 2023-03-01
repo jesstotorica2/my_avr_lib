@@ -4,12 +4,16 @@
 
 */
 
+#ifndef __MY_AVR_IO_h__
+#define __MY_AVR_IO_h__
+
 #include <avr/io.h>
 
 // Digital - all GPIO
 void setOutput(int pin);
 void setInput(int pin);
 void setPin(int pin, int val);
+void setOpenDrainPin(int pin, int val, bool pullup = true);
 
 int  getPin(int pin);
 int  getPinDir(int pin);
@@ -22,4 +26,4 @@ int  getPinDir(int pin);
 #define A4 18
 #define A5 19
 
-
+#endif

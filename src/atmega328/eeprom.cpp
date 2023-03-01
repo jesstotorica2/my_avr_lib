@@ -11,6 +11,10 @@
 //
 void eeprom::write_byte(uint8_t b, uint16_t offset)
 {
+	if( (EECR & ((1<<EEPM1) | (1<<EEPM0))) != 0 )
+	{
+		EECR = EECR & ( ~((1<<EEPM1) | (1<<EEPM0)) );
+	}
 	// Wait for completion of previous write 
 	while(EECR & (1<<EEPE));
 	// Set up address and Data Registers 
@@ -61,7 +65,7 @@ uint8_t eeprom::read_byte(uint16_t offset)
 void eeprom::read(uint8_t* data, uint16_t dlen, uint16_t offset, uint16_t delim)
 {
 	uint16_t idx;
-	if( dlen != 0x800 )
+	if( delim != 0x800 )
 	{
 		uint8_t c = (0xFF & delim);
 		if( dlen > 0 ) data[0] = read_byte(offset);

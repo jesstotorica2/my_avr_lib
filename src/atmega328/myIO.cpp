@@ -49,9 +49,26 @@ int getPin(int pin) {
 	if 		( pin >= 0  && pin < 8  ) return( (PIND>>pin)&0x1 );
   	else if ( pin >= 8  && pin < 14 ) return( (PINB>>(pin%8))&0x1 ); 
 	else if ( pin >= 14 && pin < 20 ) return( (PINC>>(pin%14))&0x1 );
-	else														  return -1;
+	else							  return -1;
 }
 
+
+//
+// setOpenDrainPin()
+//
+void setOpenDrainPin(int pin, int val, bool pullup)
+{
+	if( val == 0 ) 
+	{
+		setPin(pin, 0); 
+		setOutput(pin);
+	}
+	else
+	{
+		setInput(pin);
+		setPin(pin, 1);
+	}
+}
 
 //
 // getPinDir()
