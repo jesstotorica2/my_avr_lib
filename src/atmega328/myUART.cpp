@@ -278,7 +278,8 @@ bool myUART::overflow()
 void _myUART_wr_buff(unsigned char x) {
   uint16_t wrptr_nxt = ((_myUART_wr_ptr+1)%_myUART_buff_size);  
   if(wrptr_nxt == _myUART_rd_ptr)   _myUART_buff_ovrflw = true;
-  else {
+  else 
+  {
     _myUART_CBUFF[_myUART_wr_ptr] = x;
     _myUART_wr_ptr = wrptr_nxt;
   }
@@ -286,37 +287,14 @@ void _myUART_wr_buff(unsigned char x) {
 
 unsigned char _myUART_rd_buff() {
   unsigned char x = _myUART_CBUFF[_myUART_rd_ptr];
-  if( _myUART_rd_ptr == _myUART_wr_ptr ) {
+  if( _myUART_rd_ptr == _myUART_wr_ptr ) 
+  {
     return 0;
-  }else{
+  }
+  else
+  {
     _myUART_rd_ptr = ((_myUART_rd_ptr+1)%_myUART_buff_size);
     return x;
   } 
 }
-
-/*
-//
-//  RX DATA ISR FUNCTION
-//
-//
-//
-#ifndef MY_UART_ISR_FUNC
-#define MY_UART_ISR_FUNC
-void MY_UART_RX_ISR() {}
-#endif
-8/
-//
-// RX DATA ISR 
-//
-// 
-//
-#ifndef MY_UART_ISR
-#define MY_UART_ISR
-ISR (USART_RX_vect) {
-  _myUART_wr_buff((uint8_t)UDR0);
-  MY_UART_RX_ISR();
-}
-#endif
-*/
-
 
