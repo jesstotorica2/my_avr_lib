@@ -29,9 +29,10 @@ class esp8266 {
 		Stopwatch* 		tmr_ptr;
 		uint8_t			esp8266_rst;
 		
-		bool _send(const char* data, char* resp, uint16_t rb_len, uint16_t timeout, const char* tkn);
-		bool _recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len);
-
+		bool 	_send(const char* data, char* resp, uint16_t rb_len, uint16_t timeout, const char* tkn);
+		//bool _recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len);
+		uint8_t _recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len);
+		
 
 	public:
 		esp8266();
@@ -49,12 +50,15 @@ class esp8266 {
 		uint8_t			getConnectionIDs(char*d, uint16_t dlen);
 		uint8_t			getStatus(char *d, uint16_t dlen);
 		uint32_t 		getIP(char* d, uint16_t dlen);
+		uint32_t 		getDomainIP(const char* dname, char* d, uint16_t dlen);
 		bool			connected(char *d, uint16_t dlen);
 		uint8_t 		waitConnect(char* d, uint16_t dlen, uint16_t timeout_ms = 0);
 		uint8_t 		waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms = 0);
 		bool 			CIPsend(uint8_t link_id, const char* data, uint16_t dataLen = 0, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);		
 		bool 			CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);	
 		bool 			CIPclose(uint8_t link_id, char* resp = nullptr, uint16_t rlen = 0, uint16_t timeout_ms = 5000);	
+		// Helpers
+		uint32_t 		IPstrtou(char* ip_str, uint16_t dlen, char delim);
 }; // esp8266
 
 #endif

@@ -19,11 +19,12 @@ BTpgmrEcho* bte_ptr; //DEBUG
 bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int timeout, const char* tkn)
 {
 	uint16_t rlen = 0;
-	bool tkn_found = false;
-  	uint16_t tkn_len = strlen(tkn);
+  	uint8_t recv_buf_ret = 0;
+	uint16_t tkn_len = strlen(tkn);
 
+	// flush buffer, wait till uart stops sending
+	while( uart_ptr->available() ) uart_ptr->flush(); 
 	// Send data
-	uart_ptr->flush();
 	if( data != nullptr ) uart_ptr->tr_str(data);
 
 	// If not getting response, return
@@ -31,39 +32,67 @@ bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int 
 
 	// Start timer
 	tmr_ptr->start(timeout);
-	while( !tmr_ptr->done() && !tkn_found ){
-	  tkn_found = _recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len );
+	while( !tmr_ptr->done() && (recv_buf_ret == 0) )
+	{
+	  recv_buf_ret = _recv_to_buf(resp, &rlen, rb_len, tkn, tkn_len);
 	}
 	tmr_ptr->stop();
 	
-	return tkn_found;
+	return( recv_buf_ret == 0x1 );
 } 
 
 //
 // _recv_to_buf()
 //
 // Does the heavy lifting for send function, places recieved data into buffer. Checks for token.
-bool esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len)
+// Returns
+//  1. 0x0 - finished recieving data, token not found, length not exceeded
+//	1. 0x1 - token found
+//  2. 0x2 - 'len' exceeded
+//bool esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len)
+uint8_t esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len)
 {
   bool tkn_found = false;
   bool len_exceeded = ((*idx) >= len);
   while( uart_ptr->available() && !len_exceeded )
   {
-    if( (*idx) < len ) {                  						// Gaurd from resp buffer overflow
-      d[(*idx)]   = uart_ptr->read();     						// Get uart character
-      if( (*idx)+1 < len ) d[(*idx)+1] = '\0';        // Null terminate string (if theres room) 
-      (*idx) = (*idx) + 1;                            // Increment response length
+    if( (*idx) < len ) 
+	{                  							// Guard from resp buffer overflow
+      d[(*idx)] = uart_ptr->read();     		// Get uart character
+      if( (*idx)+1 < len ) d[(*idx)+1] = '\0';  // Null terminate string (if theres room) 
+      (*idx) = (*idx) + 1;                  	// Increment response length
 
+	  // Dont look for token if tkn_len is zero
       if( (*idx) >= tkn_len && (tkn_len > 0) )
-      { // Dont look for token if tkn_len is zero
+      { 
         for( uint16_t i = 0; (tkn_found = (tkn[i] == d[(*idx)-tkn_len+i])) && (i < tkn_len); i++ );
       }
 
     }
     else
+	{
+		// DEBUG!!!!!
+		//uart_ptr->print("Got a length exceeded!!!\r\n");
+		//uart_ptr->print("(*idx): "); uart_ptr->printnum((*idx));
+		//uart_ptr->print("\r\n");
+		//_delay_ms(3000);
+		// DEBUG!!!!!
       len_exceeded = true;
+  	}
   }
-  return (tkn_found | len_exceeded);
+
+  if( tkn_found )
+  {
+	return 0x1;
+  }
+  else if( len_exceeded )
+  {
+  	return 0x2;
+  }
+  else
+  {
+	return 0x0;
+  }
 }
 
 
@@ -257,7 +286,8 @@ bool esp8266::listen(char* d, uint16_t dlen, const char* delimiter, uint16_t tim
 		}
 	} 
   
-    data_recv_finished = _recv_to_buf(d, &idx, dlen, delimiter, tkn_len);
+	// either tkn found or limit exceed
+    data_recv_finished = ( 0 != _recv_to_buf(d, &idx, dlen, delimiter, tkn_len) ); 
     
     if( idx > idx_prev ) // Reset timeout timer if data was received
     {
@@ -332,38 +362,29 @@ uint32_t esp8266::getIP(char* d, uint16_t dlen)
 	{
 		char* ip_str;
 		ip_str = strstr(d, ":STAIP,\"");
-		if( ip_str != nullptr )
-		{	
-			char ip_byte_str[4];
-			uint16_t byte_cnt = 0;
-			uint32_t ip = 0;
-			ip_str = (ip_str+sizeof(":STAIP,\"")-1);
-			for( int i = 0, j = 0; ip_str[i] != '\0' && byte_cnt < 4; i++, j++ )
-			{
-				if( j > 3 ) // Went more than 3 spaces without finding '.' or '"'
-				{
-					return 0;
-				}
-				else if( ip_str[i] == '.' || ip_str[i] == '"' )
-				{
-					ip_byte_str[j] = '\0'; // Cap off the ip byte string
-					ip = (ip << 8) | atoi(ip_byte_str); // Convert string to integer and shift into IP 
-					byte_cnt += 1;
-					j = -1;
-					if( byte_cnt >= 4 )
-					{
-						if( ip_str[i] != '"' ) return 0;
-						else 				   return ip;
-					}
-				}
-				else
-				{
-					ip_byte_str[j] = ip_str[i];
-				}
-			}
-		}
+		ip_str = (ip_str+sizeof(":STAIP,\"")-1);
+		return( IPstrtou(ip_str, dlen-(sizeof(":STAIP,\"")+1), '"') );
 	}
 	return 0;
+}
+
+//
+// getDomainIP()
+//
+// Get IP for domain name
+uint32_t esp8266::getDomainIP(const char* dname, char* d, uint16_t dlen)
+{
+	uart_ptr->tr_str("AT+CIPDOMAIN=\"");
+	uart_ptr->tr_str(dname);
+	if( send("\"\r\n", d, dlen, 10000) )
+	{
+		char* ip_str;
+		ip_str = strstr(d, "+CIPDOMAIN:");
+		ip_str = (ip_str+sizeof("+CIPDOMAIN:")-1);
+		return( IPstrtou(ip_str, dlen-sizeof("+CIPDOMAIN:")+1, '\r') );
+	}
+	return 0;
+	
 }
 
 //
@@ -498,7 +519,7 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 		}
 		else // confirmed IPD and we have data length. Now we just need to read 'num' bytes into buffer as they come in
 		{
-			if( _recv_to_buf(d, &idx, num, nullptr, 0) ) // Will return true once 'num' is hit
+			if( ( 0 != _recv_to_buf(d, &idx, num, nullptr, 0) ) ) // Will return true once 'num' is hit
 			{	
 				*dlen = idx;
 				return link_id;
@@ -569,4 +590,42 @@ bool esp8266::CIPclose(uint8_t link_id, char* resp, uint16_t rlen, uint16_t time
 	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n>" ) );
 }
 
+
+// Helper
+uint32_t esp8266::IPstrtou(char* ip_str, uint16_t dlen, char delim)
+{
+	if( ip_str != nullptr )
+	{	
+		char ip_byte_str[4];
+		uint16_t byte_cnt = 0;
+		uint32_t ip = 0;
+		
+		for( uint32_t i = 0, j = 0; ip_str[i] != '\0' && byte_cnt < 4 && i < dlen; i++, j++ )
+		{
+			if( j > 3 ) // Went more than 3 spaces without finding '.' or delim
+			{
+				return 0;
+			}
+			else if( ip_str[i] == '.' || ip_str[i] == delim )
+			{
+				ip_byte_str[j] = '\0'; // Cap off the ip byte string
+				ip = (ip << 8) | atoi(ip_byte_str); // Convert string to integer and shift into IP 
+				byte_cnt += 1;
+				j = -1;
+				if( byte_cnt >= 4 )
+				{
+					if( ip_str[i] != delim ) return 0;
+					else 				     return ip;
+				}
+			}
+			else
+			{
+				ip_byte_str[j] = ip_str[i];
+			}
+		}
+	}
+
+	return 0;
+
+}
 
