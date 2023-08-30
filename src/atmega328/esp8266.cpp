@@ -238,8 +238,8 @@ bool esp8266::setBaudRate(long unsigned int br, char* rbuf, uint16_t rlen, uint1
 //
 bool esp8266::poke(uint16_t timeout)
 {
-	char ack_resp[8];
-	return( send("AT\r\n", ack_resp, 8, timeout) );
+	char ack_resp[16];
+	return( send("AT\r\n", ack_resp, 16, timeout) );
 }
 
 //
