@@ -137,9 +137,7 @@ void Atmega328_Programmer::endProgrammingMode(){
 	if( pgmMode )
 		while( atmegaIsBusy() ) _delay_us(5);
 	
-	//setInput(SLV_RESET);	// Set input to tri-state
-	//setPin(SLV_RESET, 0);
-	setOpenDrainPin(SLV_RESET, 0); // Set input to tri-state
+	setOpenDrainPin(SLV_RESET, 1); // Set input to tri-state
 	pgmMode = false;
 }
 
