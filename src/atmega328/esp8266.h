@@ -30,7 +30,6 @@ class esp8266 {
 		uint8_t			esp8266_rst;
 		
 		bool 	_send(const char* data, char* resp, uint16_t rb_len, uint16_t timeout, const char* tkn);
-		//bool _recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len);
 		uint8_t _recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len);
 		
 

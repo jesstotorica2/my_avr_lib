@@ -49,7 +49,6 @@ bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int 
 //  1. 0x0 - finished recieving data, token not found, length not exceeded
 //	1. 0x1 - token found
 //  2. 0x2 - 'len' exceeded
-//bool esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len)
 uint8_t esp8266::_recv_to_buf(char *d, uint16_t* idx, uint16_t len, const char* tkn, uint16_t tkn_len)
 {
   bool tkn_found = false;
