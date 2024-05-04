@@ -22,11 +22,13 @@ bool esp8266::_send(const char* data, char* resp, uint16_t rb_len, unsigned int 
   	uint8_t recv_buf_ret = 0;
 	uint16_t tkn_len = strlen(tkn);
 
-	// flush buffer, wait till uart stops sending
-	while( uart_ptr->available() ) uart_ptr->flush(); 
-	// Send data
-	if( data != nullptr ) uart_ptr->tr_str(data);
-
+	if( data != nullptr )
+	{
+		// flush buffer, wait till uart stops sending
+		while( uart_ptr->available() ) uart_ptr->flush();
+		// Send data
+		uart_ptr->tr_str(data);
+	}
 	// If not getting response, return
 	if( rb_len == 0 ) return true;
 
@@ -172,6 +174,8 @@ void esp8266::hw_rst()
 //	Transmits certain number of bytes instead of string
 bool esp8266::tr(const uint8_t* data, uint16_t dlen, char* resp, uint16_t rb_len, unsigned int timeout, const char* tkn)
 {
+	// flush buffer, wait till uart stops sending
+	while( uart_ptr->available() ) uart_ptr->flush();
 	// Send byte array
 	uart_ptr->tr_b(data, dlen);
 	// Get response  (nullptr will not send anything but will wait for specified response)
@@ -441,8 +445,9 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 	uint16_t  	max_dlen = *dlen;
 	uint8_t		link_id = 0xFF;
  	uint16_t 	numStrLen = 0, num = 0;
-  	bool 		is_ipd = false; // Assume true until proven false
+	bool 		is_ipd = false;
 	char 		c = 0;
+	*dlen = 0;
 
   if( timeout_ms > 0 ) tmr_ptr->start(timeout_ms); // Start timer (if timeout provided)
   
@@ -454,7 +459,6 @@ uint8_t esp8266::waitIPD(char* d, uint16_t *dlen, uint16_t timeout_ms)
 		{
 			if( tmr_ptr->done() )
 			{
-				//bte_ptr->print(d); bte_ptr->print(" d\n");
 				return 0xFF;
 			}
 		} 
@@ -549,8 +553,8 @@ bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char*
 	{
 		if( rlen == 0 ) _delay_ms(3);
 		// Ready to send (send it!)
-		if( esp8266::tr( (uint8_t*)data, dataLen, resp, rlen, timeout_ms, "SEND OK" ) ) return true;
-		else																			return false;
+		if( esp8266::tr( (uint8_t*)data, dataLen, resp, rlen, timeout_ms, "SEND OK\r\n" ) ) return true;
+		else                                                                                return false;
 			
 	}
 	else
@@ -583,10 +587,13 @@ bool esp8266::CIPstart(uint8_t link_id, const char* serverIP, uint16_t port, cha
 // Close connection on a given link ID
 bool esp8266::CIPclose(uint8_t link_id, char* resp, uint16_t rlen, uint16_t timeout_ms)
 {
+	// flush buffer, wait till uart stops sending
+	while( uart_ptr->available() ) uart_ptr->flush();
 	uart_ptr->tr_str("AT+CIPCLOSE=");
 	uart_ptr->tr(link_id+48);
-	
-	return( send( "\r\n", resp, rlen, timeout_ms, "OK\r\n>" ) );
+	uart_ptr->tr_str("\r\n");
+
+	return( send( nullptr, resp, rlen, timeout_ms, "OK\r\n" ) );
 }
 
 
