@@ -39,6 +39,7 @@ class myUART
 		void tr_9b(unsigned int* d, int blen);
 		void print(const char* d);
 		void printnum(int num, int base = 10);
+		void printulnum(unsigned long int num, int base = 10);
 
 		// Receive
 		bool available();

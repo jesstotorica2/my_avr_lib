@@ -215,6 +215,16 @@ void myUART::printnum(int num, int base) {
 	print(num_str);
 }
 
+//
+// printulnum()
+//
+// Converts unsigned long integer to character array and sends data
+void myUART::printulnum(unsigned long int num, int base) {
+	char num_str[16];
+	ultoa(num, num_str, base);
+	print(num_str);
+}
+
 ///////// Read ////////////////////
 
 
@@ -257,7 +267,10 @@ char myUART::read()
 //
 void myUART::flush() 
 {
-  _myUART_wr_ptr = _myUART_rd_ptr;
+  unsigned char dummy;
+  while (UCSR0A & (1<<RXC0)) dummy = UDR0; // Clear physical buffer
+  _myUART_wr_ptr = _myUART_rd_ptr; // Clear virtual buffer
+  (void)dummy; // Avoids unused warning from compiler
 }
 
 
