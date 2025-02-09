@@ -30,7 +30,7 @@ class mySPI {
 	public:
 		mySPI();
 		// Set register bits
-		void init(int mst = 1, int clk_div = 0x5, int mode = 0);
+		void init(int mst = 1, int clk_div = 0x5, int mode = 0, bool highz = false);
 		void enable(int mst);
 		void disable();
 		void set_mst();

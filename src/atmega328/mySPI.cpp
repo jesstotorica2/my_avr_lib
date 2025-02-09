@@ -38,7 +38,8 @@ mySPI::mySPI()
 //	init()
 //
 //
-void mySPI::init(int mst, int clk_div, int mode) {
+void mySPI::init(int mst, int clk_div, int mode, bool highz)
+{
 	SPCR = 0x0;
 	// Set CPOL, CPHA
 	SPCR |= ((mode&0xfc)<<CPHA);
@@ -47,8 +48,12 @@ void mySPI::init(int mst, int clk_div, int mode) {
 	SPCR |= (clk_div&0x3);
 	SPSR |= ((clk_div>>2)&0x1);
 	
-	if( mst ) set_mst();
-	else			set_slv();
+	if( highz ) set_highz();
+	else
+	{
+		if( mst ) set_mst();
+		else      set_slv();
+	}
 
 }
 
