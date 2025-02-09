@@ -551,6 +551,7 @@ bool esp8266::CIPsend(uint8_t link_id, const char* data, uint16_t dataLen, char*
 	// Set up data send
 	if( send( cip_cmd, resp, rlen, timeout_ms, "OK\r\n>" ) )
 	{
+		if( data == nullptr ) return true; // setting data to null will simply set up cip send and allow user to send data
 		if( rlen == 0 ) _delay_ms(3);
 		// Ready to send (send it!)
 		if( esp8266::tr( (uint8_t*)data, dataLen, resp, rlen, timeout_ms, "SEND OK\r\n" ) ) return true;
