@@ -53,7 +53,6 @@
 class myADC
 {
 	public:
-		//myADC(int clkdiv = MYADC_CLKDIV16, int sig_in = );
 		myADC();
 		~myADC();
 		
