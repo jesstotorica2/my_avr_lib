@@ -7,6 +7,16 @@
 #include "myIO.h"
 
 //
+// setPUD()
+//
+void setPUD(int val)
+{
+	if( val ) val = 1;
+	MCUCR &= ( ~(1 << PUD) );
+	MCUCR |= ( val << PUD );
+}
+
+//
 //	setOutput()
 //
 //	set pin as output

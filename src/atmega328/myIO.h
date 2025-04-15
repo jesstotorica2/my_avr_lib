@@ -9,6 +9,9 @@
 
 #include <avr/io.h>
 
+// Global pull-up disable bit (set to 1 to disable 10K pull-up)
+void setPUD(int val);
+
 // Digital - all GPIO
 void setOutput(int pin);
 void setInput(int pin);
