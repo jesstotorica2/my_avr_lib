@@ -24,11 +24,12 @@ extern Stopwatch tmr0;
 #define PGM_WORD_T unsigned int
 #endif 
 
-#define PGMR_DEBUG
-//typedef unsigned char byte_t;
+//#define PGMR_DEBUG
+
 typedef PGM_BYTE_T pgm_byte_t;
 
-class Atmega328_Programmer {
+class Atmega328_Programmer
+{
 	public:
 		// Public methods
 		Atmega328_Programmer(mySPI* s_ptr = nullptr, myUART* u_ptr = nullptr);
@@ -51,8 +52,8 @@ class Atmega328_Programmer {
 
 	private:
 		// Data members
-		mySPI* 			spi_ptr;
-		bool 				pgmMode;
+		mySPI*      spi_ptr;
+		bool        pgmMode;
 		pgm_byte_t  err_flag;	
 
 		// Private methods

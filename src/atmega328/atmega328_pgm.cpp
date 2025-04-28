@@ -25,8 +25,15 @@ Atmega328_Programmer::Atmega328_Programmer(mySPI* s_ptr, myUART* u_ptr) {
 	spi_ptr->set_highz();
 
 	#ifdef PGMR_DEBUG
-	if(u_ptr == nullptr) u_ptr = (myUART*)malloc(sizeof(myUART));
-	else				 u_ptr = u_ptr;
+	if(u_ptr == nullptr)
+	{
+		uint8_t* uart_buff = (uint8_t*)malloc( sizeof(uint8_t)*16 );
+		uart_ptr = new myUART( uart_buff, 16 );
+	}
+	else
+	{
+		uart_ptr = u_ptr;
+	}
 	#endif
 	
 	//setInput(SLV_RESET);    // Set input to tri-state
