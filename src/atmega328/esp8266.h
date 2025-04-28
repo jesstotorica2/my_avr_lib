@@ -18,6 +18,9 @@
 #define ESP8266_DEFAULT_BR	 9600
 #define ESP8266_SUCCESS_RESP "OK\r\n"
 
+// Baud rates to try in case 9600 is no the pre-set default (after a hw reset)
+#define ESP8266_ALT_DEFAULT_BRS {115200UL} // Assign to 'long unsigned'
+
 // Commands
 #define ESP8266_CIPSERVER_CMD(port) ("AT+CIPSERVER=1," #port "\r\n")
 #define ESP8266_HOSTNAME_CMD(hostname) ("AT+CWHOSTNAME=\"" #hostname "\"\r\n")
@@ -42,7 +45,7 @@ class esp8266 {
 		bool 			tr(const uint8_t* data, uint16_t dlen, char* resp = nullptr, uint16_t rb_len = 0, uint16_t timeout = 5000, const char* tkn = nullptr);
 		bool 			send(const char* data, char* resp = nullptr, uint16_t rb_len = 0, uint16_t timeout = 5000, const char* tkn = nullptr);
 		bool			resetBaudRate(unsigned long int br, unsigned long int def_br=ESP8266_DEFAULT_BR);
-		bool 			setBaudRate(unsigned long int br, char* rbuf, uint16_t rlen, uint16_t timeout = 5000);
+		bool 			setBaudRate(unsigned long int br, char* rbuf, uint16_t rlen, uint16_t timeout = 5000, bool flash = false);
 		bool 			poke(uint16_t timeout);
 		bool 			connectWifi(const char* ssid, const char* pswd, char* rbuf, uint16_t rblen);
 		bool 			listen(char* d, uint16_t dlen, const char* delimiter = nullptr, uint16_t timeout_ms = 0);

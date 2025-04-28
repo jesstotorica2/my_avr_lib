@@ -130,13 +130,38 @@ esp8266::~esp8266()
 // Initialize ESP8266 module
 bool esp8266::init(myUART* u_ptr, Stopwatch* t_ptr, uint8_t rst_pin, unsigned long int br)
 {
-	//char setbr_resp[48];
 	uart_ptr = u_ptr;
 	tmr_ptr = t_ptr;
 
 	esp8266_rst = rst_pin;
 	
-	return( resetBaudRate(br) );
+	// Try default baud rate of 9600
+	if( resetBaudRate( br, ESP8266_DEFAULT_BR ) ) return true;
+	else
+	{
+		// Try list of alternate default baud rates. Re-flash default to 9600 if one succeeds
+		long unsigned int alt_brs[] = ESP8266_ALT_DEFAULT_BRS;
+		for( unsigned int br_i = 0; br_i < sizeof(alt_brs)/sizeof(alt_brs[0]); br_i++ )
+		{
+			//if( resetBaudRate( br, br_i ) )
+			if( resetBaudRate( ESP8266_DEFAULT_BR, alt_brs[br_i] ) )
+			{
+				char setbr_resp[48];
+				// Flash a new default baud rate to esp8266
+				if( setBaudRate( ESP8266_DEFAULT_BR, setbr_resp, 48, 5000, true ) )
+				{
+					// Set the original desired baud rate and return (do not flash)
+					return( setBaudRate( br, setbr_resp, 48 ) );
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+
+		return false;
+	}
 }
 
 //
@@ -223,9 +248,11 @@ bool esp8266::resetBaudRate(long unsigned int br, long unsigned int def_br)
 // setBaudRate()
 //
 // Sets ESP8266 buad rate and local UART baud rate
-bool esp8266::setBaudRate(long unsigned int br, char* rbuf, uint16_t rlen, uint16_t timeout)
+bool esp8266::setBaudRate(long unsigned int br, char* rbuf, uint16_t rlen, uint16_t timeout, bool flash)
 {
-	char set_br_cmd[31] = "AT+UART_CUR=";
+	char set_br_cmd[31] = "AT+UART_";
+	if( flash ) strcat( set_br_cmd, "DEF=" );
+	else        strcat( set_br_cmd, "CUR=" );
 	ultoa(br, (set_br_cmd+12), 10);
 	strcat((set_br_cmd+12), ",8,1,0,0\r\n"); 
 	if( send(set_br_cmd, rbuf, rlen, timeout) )
