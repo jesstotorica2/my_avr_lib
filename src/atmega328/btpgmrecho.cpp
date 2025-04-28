@@ -44,12 +44,12 @@ uint8_t BTpgmrEcho::tr_stream( uint8_t* w, uint8_t wlen, uint8_t* r, uint8_t rle
 {
 	uint8_t bytes_read;
 	setPin(cs_n, 0);
-	spi_ptr->tr( ECHO_WRITE | ECHO_READ ); 			// send cmd
+	spi_ptr->tr( ECHO_WRITE | ECHO_READ ); 	    // send cmd
 	_delay_us(ECHO_TX_DELAY_US);
-	bytes_read = spi_ptr->tr(wlen);							// send wlen, get rcnt
+	bytes_read = spi_ptr->tr(wlen);				// send wlen, get rcnt
 	if( bytes_read > rlen )	bytes_read = rlen;
-	_delay_us(ECHO_TX_DELAY_US);								
-	spi_ptr->tr(bytes_read);										// send rlen (ignore wcnt)
+	_delay_us(ECHO_TX_DELAY_US);
+	spi_ptr->tr(bytes_read);                    // send rlen (ignore wcnt)
 	_delay_us(ECHO_TX_DELAY_US);
 
 	uint8_t ceiling = (bytes_read > wlen) ? bytes_read : wlen;
@@ -58,7 +58,7 @@ uint8_t BTpgmrEcho::tr_stream( uint8_t* w, uint8_t wlen, uint8_t* r, uint8_t rle
 	for( uint8_t i = 0; i < ceiling; i++ )
 	{
 		if( i < wlen ) wbyte = w[i];	// Still writing?
-		else					 wbyte = 		0;
+		else           wbyte = 0;
 			
 		rbyte = spi_ptr->tr(wbyte);		// Transfer data
 
@@ -97,11 +97,11 @@ uint8_t BTpgmrEcho::rd_available()
 {
 	uint8_t bytes_available;
 	setPin(cs_n, 0);
-	spi_ptr->tr( ECHO_WRITE | ECHO_READ ); 			// send cmd
+	spi_ptr->tr( ECHO_WRITE | ECHO_READ ); // send cmd
 	_delay_us(ECHO_TX_DELAY_US);
-	bytes_available = spi_ptr->tr(0);						// send wlen, get rcnt
-	_delay_us(ECHO_TX_DELAY_US);								
-	spi_ptr->tr(0);															// send rlen (ignore wcnt)
+	bytes_available = spi_ptr->tr(0);	   // send wlen, get rcnt
+	_delay_us(ECHO_TX_DELAY_US);
+	spi_ptr->tr(0);                        // send rlen (ignore wcnt)
 	_delay_us(ECHO_TX_DELAY_US);
 	return bytes_available;
 }

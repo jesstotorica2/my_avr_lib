@@ -31,12 +31,12 @@ class BTpgmrEcho {
 
 		BTpgmrEcho(mySPI* s, uint8_t chipSelectPin);
 		uint8_t tr_stream( uint8_t* w, uint8_t wlen, uint8_t* r, uint8_t rlen );
-		void 		wr_stream( uint8_t* w, uint8_t wlen );
+		void    wr_stream( uint8_t* w, uint8_t wlen );
 		uint8_t rd_stream( uint8_t* r, uint8_t rlen );
 		uint8_t rd_available();
 
-		void 		print(	const char* d	);
-		void 		printnum( int num, uint8_t base = 10 );
+		void    print(	const char* d	);
+		void    printnum( int num, uint8_t base = 10 );
 };
 
 
